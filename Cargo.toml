@@ -4,4 +4,5 @@ version = "0.1.0"
 authors = ["smiyaguchi <smiyaguchi96@gmail.com>"]
 
 [dependencies]
+clap = "2.29.4"
 nix = "0.10.0"
