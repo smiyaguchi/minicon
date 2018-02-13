@@ -1,0 +1,7 @@
+[package]
+name = "minicon"
+version = "0.1.0"
+authors = ["smiyaguchi <smiyaguchi96@gmail.com>"]
+
+[dependencies]
+nix = "0.10.0"
