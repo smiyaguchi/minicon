@@ -2,7 +2,8 @@
 name = "minicon"
 version = "0.1.0"
 authors = ["smiyaguchi <smiyaguchi96@gmail.com>"]
+description = "minicon is minimal container runtime."
 
 [dependencies]
-clap = "2.29.4"
+clap = {version = "2.30", features = ["yaml"]}
 nix = "0.10.0"

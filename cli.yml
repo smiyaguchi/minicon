@@ -1,0 +1,39 @@
+name: minicon
+version: "0.1.0"
+author: smiyaguchi <smiyaguchi96@gmail.com>
+about: minimal container runtime
+subcommands:
+    - run:
+        about: run command create a container
+        version: "0.1.0"
+        args:
+            - rootfs:
+                long: rootfs
+                value_name: path
+                takes_value: true
+                required: true
+                help: Rootfs path
+            - all:
+                long: all
+                help: All namespace
+            - ipc:
+                long: ipc
+                help: IPC namespace
+            - network:
+                long: network
+                help: Network namespace
+            - mount:
+                long: mount
+                help: Mount namespace
+            - pid:
+                long: pid
+                help: PID namespace
+            - user:
+                long: user
+                help: User namespace
+            - uts:
+                long: uts
+                help: UTS namespace
+            - cgroup:
+                long: cgroup
+                help: Cgroup namespace
