@@ -8,11 +8,11 @@ subcommands:
         version: "0.1.0"
         args:
             - rootfs:
-                long: rootfs
-                value_name: path
-                takes_value: true
                 required: true
                 help: Rootfs path
+            - command:
+                required: true
+                help: Container exec command
             - all:
                 long: all
                 help: All namespace
