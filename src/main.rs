@@ -2,7 +2,7 @@
 extern crate clap;
 extern crate nix;
 
-use clap::App;
+use clap::{App, ArgMatches};
 use nix::unistd::{chdir, getcwd};
 
 fn main() {
@@ -10,9 +10,16 @@ fn main() {
     let matches = App::from_yaml(yaml).get_matches();
 
     if let Some(ref matches) = matches.subcommand_matches("run") {
-        println!("cwd is {:?}", getcwd().unwrap());
-        let rootfs = matches.value_of("rootfs").unwrap();
-        chdir(rootfs).unwrap();
+        match command_run(&matches) {
+            Ok(()) => println!("Success chdir"),
+            Err(e) => println!("{}", e),  
+        }
         println!("cwd is {:?}", getcwd().unwrap());
     }
+}
+
+fn command_run(matches: &ArgMatches) -> Result<(), String> {
+    let rootfs = matches.value_of("rootfs").unwrap();
+    chdir(rootfs).expect("Failed to chdir");
+    Ok(())  
 }

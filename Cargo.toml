@@ -6,4 +6,5 @@ description = "minicon is minimal container runtime."
 
 [dependencies]
 clap = {version = "2.30", features = ["yaml"]}
+error-chain = "0.11.0"
 nix = "0.10.0"
