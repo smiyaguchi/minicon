@@ -1,9 +1,16 @@
+#![recursion_limit = "1024"]
+
 #[macro_use]
 extern crate clap;
+#[macro_use]
+extern crate error_chain;
 extern crate nix;
 
+mod errors;
+
 use clap::{App, ArgMatches};
-use nix::unistd::{chdir, getcwd};
+use errors::*;
+use nix::unistd::chdir;
 
 fn main() {
     let yaml = load_yaml!("../cli.yml");
@@ -14,12 +21,11 @@ fn main() {
             Ok(()) => println!("Success chdir"),
             Err(e) => println!("{}", e),  
         }
-        println!("cwd is {:?}", getcwd().unwrap());
     }
 }
 
-fn command_run(matches: &ArgMatches) -> Result<(), String> {
-    let rootfs = matches.value_of("rootfs").unwrap();
-    chdir(rootfs).expect("Failed to chdir");
+fn command_run(matches: &ArgMatches) -> Result<()> {
+    let root = matches.value_of("root").unwrap();
+    chdir(root).chain_err(|| format!("Failed to chdir {}", root))?;
     Ok(())  
 }

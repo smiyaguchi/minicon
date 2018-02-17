@@ -7,7 +7,7 @@ subcommands:
         about: run command create a container
         version: "0.1.0"
         args:
-            - rootfs:
+            - root:
                 required: true
                 help: Rootfs path
             - command:
