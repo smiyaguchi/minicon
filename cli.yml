@@ -13,27 +13,5 @@ subcommands:
             - command:
                 required: true
                 help: Container exec command
-            - all:
-                long: all
-                help: All namespace
-            - ipc:
-                long: ipc
-                help: IPC namespace
-            - network:
-                long: network
-                help: Network namespace
-            - mount:
-                long: mount
-                help: Mount namespace
-            - pid:
-                long: pid
-                help: PID namespace
-            - user:
-                long: user
-                help: User namespace
-            - uts:
-                long: uts
-                help: UTS namespace
-            - cgroup:
-                long: cgroup
-                help: Cgroup namespace
+            - arg:
+                help: Container exec command args.
