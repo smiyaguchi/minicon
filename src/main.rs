@@ -14,6 +14,8 @@ use clap::{App, ArgMatches};
 use errors::*;
 use nix::unistd::chdir;
 use nix::unistd::{fork, ForkResult, execvp};
+use nix::sched::CloneFlags;
+use nix::sched::unshare;
 use nix::sys::wait::wait;
 use nix_extension::clearenv;
 use std::ffi::CString;
@@ -35,6 +37,15 @@ fn command_run(matches: &ArgMatches) -> Result<()> {
     chdir(root).chain_err(|| format!("Failed to chdir {}", root))?;
     match fork()? {
         ForkResult::Child => {
+            unshare(CloneFlags::CLONE_NEWNS | 
+                    CloneFlags::CLONE_NEWIPC | 
+                    CloneFlags::CLONE_NEWNET | 
+                    CloneFlags::CLONE_NEWPID | 
+                    CloneFlags::CLONE_NEWUTS | 
+                    CloneFlags::CLONE_NEWUSER | 
+                    CloneFlags::CLONE_NEWCGROUP)
+                .chain_err(|| "Failed unshare")?;
+            
             // NOTE: Do get arg
             let a: [String; 1] = ["test".to_string()];
             exec(matches.value_of("command").unwrap(), &a, &a)?;
