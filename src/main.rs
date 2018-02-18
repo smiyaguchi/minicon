@@ -24,8 +24,8 @@ fn main() {
 
     if let Some(ref matches) = matches.subcommand_matches("run") {
         match command_run(&matches) {
-            Ok(()) => println!("Success chdir"),
-            Err(e) => println!("{}", e),  
+          Ok(()) => println!("Success command run"),
+          Err(e) => println!("{}", e),  
         }
     }
 }
@@ -39,10 +39,8 @@ fn command_run(matches: &ArgMatches) -> Result<()> {
             let a: [String; 1] = ["test".to_string()];
             exec(matches.value_of("command").unwrap(), &a, &a)?;
         }
-        ForkResult::Parent { child } => {
-            match wait()? {
-                _ => println!("Pid {} exit", child),  
-            }
+        ForkResult::Parent { .. } => {
+            wait()?;
         }
     }
     Ok(())  
@@ -57,7 +55,7 @@ fn exec(path: &str, args: &[String], env: &[String]) -> Result<()> {
     let a: Vec<CString> = args.iter()
         .map(|s| CString::new(s.to_string()).unwrap_or_default())
         .collect();
-    let env: Vec<CString> = env.iter()
+    let _env: Vec<CString> = env.iter()
         .map(|s| CString::new(s.to_string()).unwrap_or_default())
         .collect();
     execvp(&p, &a).chain_err(|| "Failed to exec")?;
