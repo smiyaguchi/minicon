@@ -11,3 +11,6 @@ Minicon create and run container. Separete the following namespaces.
 * PIC Namespace
 * UTS Namespace
 * User namespace
+
+## License
+Minicon is released under the MIT License
