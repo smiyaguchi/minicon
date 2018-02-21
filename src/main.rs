@@ -5,6 +5,8 @@
 extern crate clap;
 #[macro_use]
 extern crate error_chain;
+#[macro_use]
+extern crate lazy_static;
 extern crate libc;
 extern crate nix;
 extern crate serde;
@@ -18,6 +20,7 @@ mod oci;
 
 use clap::{App, ArgMatches};
 use errors::*;
+use lazy_static::initialize;
 use nix::unistd::chdir;
 use nix::unistd::{fork, ForkResult, execvp};
 use nix::sched::CloneFlags;
@@ -25,9 +28,24 @@ use nix::sched::unshare;
 use nix::sys::wait::wait;
 use nix_extension::clearenv;
 use oci::Spec;
+use std::collections::HashMap;
 use std::ffi::CString;
 use std::fs::File;
 use std::path::Path;
+
+lazy_static! {
+    static ref NAMESPACES: HashMap<CloneFlags, &'static str> = {
+        let mut n = HashMap::new();
+        n.insert(CloneFlags::CLONE_NEWIPC, "ipc");
+        n.insert(CloneFlags::CLONE_NEWUTS, "uts");
+        n.insert(CloneFlags::CLONE_NEWNET, "net");
+        n.insert(CloneFlags::CLONE_NEWPID, "pid");
+        n.insert(CloneFlags::CLONE_NEWNS, "mnt");
+        n.insert(CloneFlags::CLONE_NEWCGROUP, "cgroup");
+        n.insert(CloneFlags::CLONE_NEWUSER, "user");
+        n
+    };  
+}
 
 fn main() {
     let yaml = load_yaml!("../cli.yml");
@@ -42,8 +60,9 @@ fn main() {
 }
 
 fn command_run(matches: &ArgMatches) -> Result<()> {
-    let spec = read_config("config.json")?;
-    println!("{:#?}", spec);
+    let _spec = read_config("config.json")?;
+
+    initialize(&NAMESPACES);
 
     let root = matches.value_of("root").unwrap();
     chdir(root).chain_err(|| format!("Failed to chdir {}", root))?;
