@@ -34,15 +34,15 @@ use std::fs::File;
 use std::path::Path;
 
 lazy_static! {
-    static ref NAMESPACES: HashMap<CloneFlags, &'static str> = {
+    static ref NAMESPACES: HashMap<&'static str, CloneFlags> = {
         let mut n = HashMap::new();
-        n.insert(CloneFlags::CLONE_NEWIPC, "ipc");
-        n.insert(CloneFlags::CLONE_NEWUTS, "uts");
-        n.insert(CloneFlags::CLONE_NEWNET, "net");
-        n.insert(CloneFlags::CLONE_NEWPID, "pid");
-        n.insert(CloneFlags::CLONE_NEWNS, "mnt");
-        n.insert(CloneFlags::CLONE_NEWCGROUP, "cgroup");
-        n.insert(CloneFlags::CLONE_NEWUSER, "user");
+        n.insert("ipc", CloneFlags::CLONE_NEWIPC);
+        n.insert("uts", CloneFlags::CLONE_NEWUTS);
+        n.insert("net", CloneFlags::CLONE_NEWNET);
+        n.insert("pid", CloneFlags::CLONE_NEWPID);
+        n.insert("mount", CloneFlags::CLONE_NEWNS);
+        n.insert("cgroup", CloneFlags::CLONE_NEWCGROUP);
+        n.insert("user", CloneFlags::CLONE_NEWUSER);
         n
     };  
 }
@@ -68,14 +68,13 @@ fn command_run(matches: &ArgMatches) -> Result<()> {
     chdir(root).chain_err(|| format!("Failed to chdir {}", root))?;
     match fork()? {
         ForkResult::Child => {
-            unshare(CloneFlags::CLONE_NEWNS | 
-                    CloneFlags::CLONE_NEWIPC | 
-                    CloneFlags::CLONE_NEWNET | 
-                    CloneFlags::CLONE_NEWPID | 
-                    CloneFlags::CLONE_NEWUTS | 
-                    CloneFlags::CLONE_NEWUSER | 
-                    CloneFlags::CLONE_NEWCGROUP)
-                .chain_err(|| "Failed unshare")?;
+            let mut clone_flag = CloneFlags::empty();
+            //for n in spec.linux.namespaces {
+            //    if let Some(flag) = NAMESPACES.get(n.typ) {
+            //        clone_flag.insert(*flag);  
+            //    }
+            //}
+            unshare(clone_flag).chain_err(|| "Failed unshare")?; 
             
             // NOTE: Do get arg
             let a: [String; 1] = ["test".to_string()];
