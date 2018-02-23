@@ -47,9 +47,6 @@ lazy_static! {
     };  
 }
 
-const CONFIG: &'static str = "config.json";
-const CLI: &'static str = "cli.yml";
-
 fn main() {
     let yaml = load_yaml!("../cli.yml");
     let matches = App::from_yaml(yaml).get_matches();
