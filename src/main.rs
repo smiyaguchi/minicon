@@ -48,7 +48,7 @@ lazy_static! {
 }
 
 fn main() {
-    let yaml = load_yaml!("../cli.yml");
+    let yaml = load_yaml!("cli.yml");
     let matches = App::from_yaml(yaml).get_matches();
 
     if let Some(ref matches) = matches.subcommand_matches("run") {
