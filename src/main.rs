@@ -21,10 +21,12 @@ mod oci;
 use clap::{App, ArgMatches};
 use errors::*;
 use lazy_static::initialize;
+use nix::fcntl::{open, OFlag};
 use nix::unistd::chdir;
-use nix::unistd::{fork, ForkResult, execvp};
+use nix::unistd::{fork, ForkResult, execvp, close};
 use nix::sched::CloneFlags;
-use nix::sched::unshare;
+use nix::sched::{setns, unshare};
+use nix::sys::stat::Mode;
 use nix::sys::wait::wait;
 use nix_extension::clearenv;
 use oci::Spec;
@@ -69,11 +71,23 @@ fn command_run(matches: &ArgMatches) -> Result<()> {
     match fork()? {
         ForkResult::Child => {
             let mut clone_flag = CloneFlags::empty();
-            for n in spec.linux.namespaces {
-                // Do setns. If namespace contains path.
-                if let Some(namespace) = NAMESPACES.get(&*n.typ) {
-                    clone_flag.insert(*namespace);  
+            let mut to_enter = Vec::new();
+            for ns in spec.linux.namespaces {
+                // Do namespaces type duplicate to occure error
+
+                if let Some(namespace) = NAMESPACES.get(&*ns.typ) {
+                    if ns.path.is_empty() {
+                        clone_flag.insert(*namespace);  
+                    } else {
+                        let fd = open(&*ns.path, OFlag::empty(), Mode::empty()).chain_err(|| format!("Failed to open file {}", ns.typ))?;
+                        to_enter.push((*namespace, fd));  
+                    } 
                 }
+            }
+
+            for &(namespace, fd) in &to_enter {
+                setns(fd, namespace).chain_err(|| format!("Failed to enter {:?}", namespace))?;
+                close(fd)?;  
             }
             unshare(clone_flag)?; 
             
