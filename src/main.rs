@@ -60,7 +60,7 @@ fn main() {
 }
 
 fn command_run(matches: &ArgMatches) -> Result<()> {
-    let _spec = read_config("config.json")?;
+    let spec = read_config("config.json")?;
 
     initialize(&NAMESPACES);
 
@@ -69,12 +69,13 @@ fn command_run(matches: &ArgMatches) -> Result<()> {
     match fork()? {
         ForkResult::Child => {
             let mut clone_flag = CloneFlags::empty();
-            //for n in spec.linux.namespaces {
-            //    if let Some(flag) = NAMESPACES.get(n.typ) {
-            //        clone_flag.insert(*flag);  
-            //    }
-            //}
-            unshare(clone_flag).chain_err(|| "Failed unshare")?; 
+            for n in spec.linux.namespaces {
+                // Do setns. If namespace contains path.
+                if let Some(namespace) = NAMESPACES.get(&*n.typ) {
+                    clone_flag.insert(*namespace);  
+                }
+            }
+            unshare(clone_flag)?; 
             
             // NOTE: Do get arg
             let a: [String; 1] = ["test".to_string()];

@@ -1,18 +1,7 @@
 #[derive(Deserialize, Debug)]
-pub enum NamespaceType {
-    pid,
-    network,
-    mount,
-    ipc,
-    uts,
-    user,
-    cgroup,  
-}
-
-#[derive(Deserialize, Debug)]
 pub struct Namespace {
     #[serde(rename = "type")]
-    pub typ: NamespaceType,
+    pub typ: String,
     #[serde(default)]
     pub path: String, 
 }
