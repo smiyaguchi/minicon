@@ -54,14 +54,14 @@ fn main() {
     let matches = App::from_yaml(yaml).get_matches();
 
     if let Some(ref matches) = matches.subcommand_matches("run") {
-        match command_run(&matches) {
+        match cmd_run(&matches) {
           Ok(()) => println!("Success command run"),
           Err(e) => println!("{}", e),  
         }
     }
 }
 
-fn command_run(matches: &ArgMatches) -> Result<()> {
+fn cmd_run(matches: &ArgMatches) -> Result<()> {
     let spec = read_config("config.json")?;
 
     initialize(&NAMESPACES);
