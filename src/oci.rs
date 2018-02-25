@@ -1,4 +1,11 @@
 #[derive(Deserialize, Debug)]
+pub struct Root {
+    pub path: String,
+    #[serde(rename = "readonly")]
+    pub read_only: bool,  
+}
+
+#[derive(Deserialize, Debug)]
 pub struct Namespace {
     #[serde(rename = "type")]
     pub typ: String,
@@ -13,5 +20,8 @@ pub struct Linux {
 
 #[derive(Deserialize, Debug)]
 pub struct Spec {
+    #[serde(rename = "ociVersion")]
+    pub oci_version: String,
+    pub root: Root,
     pub linux: Linux,
 }

@@ -7,11 +7,11 @@ subcommands:
         about: run command create a container
         version: "0.1.0"
         args:
-            - root:
+            - bundle:
                 required: true
-                help: Rootfs path
+                help: Container bundle path.
             - command:
                 required: true
-                help: Container exec command
+                help: Container exec command.
             - arg:
                 help: Container exec command args.

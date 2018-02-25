@@ -66,8 +66,8 @@ fn command_run(matches: &ArgMatches) -> Result<()> {
 
     initialize(&NAMESPACES);
 
-    let root = matches.value_of("root").unwrap();
-    chdir(root).chain_err(|| format!("Failed to chdir {}", root))?;
+    let bundle = matches.value_of("bundle").unwrap();
+    chdir(bundle).chain_err(|| format!("Failed to chdir {}", bundle))?;
     match fork()? {
         ForkResult::Child => {
             let mut clone_flag = CloneFlags::empty();
@@ -79,7 +79,7 @@ fn command_run(matches: &ArgMatches) -> Result<()> {
                     if ns.path.is_empty() {
                         clone_flag.insert(*namespace);  
                     } else {
-                        let fd = open(&*ns.path, OFlag::empty(), Mode::empty()).chain_err(|| format!("Failed to open file {}", ns.typ))?;
+                        let fd = open(&*ns.path, OFlag::empty(), Mode::empty()).chain_err(|| format!("Failed to open file {}", ns.path))?;
                         to_enter.push((*namespace, fd));  
                     } 
                 }
