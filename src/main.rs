@@ -50,14 +50,18 @@ lazy_static! {
 }
 
 fn main() {
+    run().expect("Failed exec minicon");
+}
+
+fn run() -> Result<()> {
     let yaml = load_yaml!("cli.yml");
     let matches = App::from_yaml(yaml).get_matches();
 
-    if let Some(ref matches) = matches.subcommand_matches("run") {
-        match cmd_run(&matches) {
-          Ok(()) => println!("Success command run"),
-          Err(e) => println!("{}", e),  
+    match matches.subcommand() {
+        ("run", Some(create_matches)) => {
+            cmd_run(create_matches) 
         }
+        _ => bail!("Command nod recognized."), 
     }
 }
 
