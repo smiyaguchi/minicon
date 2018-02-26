@@ -3,6 +3,16 @@ version: "0.1.0"
 author: smiyaguchi <smiyaguchi96@gmail.com>
 about: minimal container runtime
 subcommands:
+    - create:
+        about: Create a container.
+        version: "0.1.0"
+        args:
+            - container-id:
+                required: true
+                help: Container id.
+            - bundle:
+                required: true
+                help: Container bundle path.
     - run:
         about: run command create a container
         version: "0.1.0"

@@ -73,7 +73,7 @@ fn cmd_run(matches: &ArgMatches) -> Result<()> {
             let mut clone_flag = CloneFlags::empty();
             let mut to_enter = Vec::new();
             for ns in spec.linux.namespaces {
-                // Do namespaces type duplicate to occure error
+                // NOTE: Do namespaces type duplicate to occure error
 
                 if let Some(namespace) = NAMESPACES.get(&*ns.typ) {
                     if ns.path.is_empty() {
