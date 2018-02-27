@@ -9,6 +9,7 @@ subcommands:
         args:
             - container-id:
                 required: true
+                value_name: id
                 help: Container id.
             - bundle:
                 required: true

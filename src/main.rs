@@ -58,14 +58,21 @@ fn run() -> Result<()> {
     let matches = App::from_yaml(yaml).get_matches();
 
     match matches.subcommand() {
-        ("run", Some(create_matches)) => {
-            cmd_run(create_matches) 
+        ("create", Some(create_matches)) => {
+            cmd_create(
+                create_matches.value_of("id").unwrap(), 
+                create_matches.value_of("bundle").unwrap(),
+                create_matches
+            )  
+        }
+        ("run", Some(run_matches)) => {
+            cmd_run(run_matches) 
         }
         _ => bail!("Command nod recognized."), 
     }
 }
 
-fn cmd_run(matches: &ArgMatches) -> Result<()> {
+fn cmd_create(_id: &str, _bundle: &str, matches: &ArgMatches) -> Result<()> {
     let spec = read_config("config.json")?;
 
     initialize(&NAMESPACES);
@@ -103,6 +110,10 @@ fn cmd_run(matches: &ArgMatches) -> Result<()> {
             wait()?;
         }
     }
+    Ok(())  
+}
+
+fn cmd_run(_matches: &ArgMatches) -> Result<()> {
     Ok(())  
 }
 
