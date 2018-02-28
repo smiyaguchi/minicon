@@ -2,6 +2,11 @@ name: minicon
 version: "0.1.0"
 author: smiyaguchi <smiyaguchi96@gmail.com>
 about: minimal container runtime
+args:
+    - root:
+        default_value: /run/minicon
+        takes_value: true
+        help: Container rootfs path. 
 subcommands:
     - create:
         about: Create a container.

@@ -72,13 +72,20 @@ fn run() -> Result<()> {
     }
 }
 
-fn cmd_create(_id: &str, _bundle: &str, matches: &ArgMatches) -> Result<()> {
-    let spec = read_config("config.json")?;
+fn container_dir(root: &str, id: &str) -> String {
+    format!("{}/{}", root, id)  
+}
 
+fn cmd_create(id: &str, bundle: &str, matches: &ArgMatches) -> Result<()> {
     initialize(&NAMESPACES);
 
-    let bundle = matches.value_of("bundle").unwrap();
     chdir(bundle).chain_err(|| format!("Failed to chdir {}", bundle))?;
+    let spec = read_config("config.json")?;
+    
+    let root = matches.value_of("root").unwrap().to_string();
+    let _dir = container_dir(&root, id);
+    // NOTE: create container directory
+
     match fork()? {
         ForkResult::Child => {
             let mut clone_flag = CloneFlags::empty();
