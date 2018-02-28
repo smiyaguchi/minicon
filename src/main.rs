@@ -33,6 +33,7 @@ use oci::Spec;
 use std::collections::HashMap;
 use std::ffi::CString;
 use std::fs::File;
+use std::fs::create_dir;
 use std::path::Path;
 
 lazy_static! {
@@ -83,8 +84,8 @@ fn cmd_create(id: &str, bundle: &str, matches: &ArgMatches) -> Result<()> {
     let spec = read_config("config.json")?;
     
     let root = matches.value_of("root").unwrap().to_string();
-    let _dir = container_dir(&root, id);
-    // NOTE: create container directory
+    let dir = container_dir(&root, id);
+    create_dir(&dir).chain_err(|| format!("Failed create dir. Container id is {}", id))?;
 
     match fork()? {
         ForkResult::Child => {
