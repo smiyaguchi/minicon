@@ -9,4 +9,4 @@ Minicon is oci-compliant container runtime.
 * Rust 1.23.0
 
 ## License
-Minicon is released under the MIT License
+Minicon is released under the [MIT](https://github.com/smiyaguchi/minicon/blob/master/LICENSE) License
