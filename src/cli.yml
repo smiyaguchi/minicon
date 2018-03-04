@@ -14,6 +14,7 @@ subcommands:
             - id:
                 required: true
                 takes_value: true
+                value_name: container-id
                 help: Container id.
     - create:
         about: Create a container.
@@ -21,6 +22,7 @@ subcommands:
             - id:
                 required: true
                 takes_value: true
+                value_name: container-id
                 help: Container id.
             - bundle:
                 required: true
@@ -32,6 +34,7 @@ subcommands:
             - id:
                 required: true
                 takes_value: true
+                value_name: container-id
                 help: Start a container.
     - run:
         about: run command create a container
@@ -50,6 +53,7 @@ subcommands:
             - id:
                 required: true
                 takes_value: true
+                value_name: container-id
                 help: Container id.
             - signal:
                 required: true
@@ -62,4 +66,5 @@ subcommands:
             - id:
                 required: true
                 takes_value: true
+                value_name: container-id
                 help: Container id.
