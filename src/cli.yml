@@ -8,9 +8,15 @@ args:
         takes_value: true
         help: Container rootfs path. 
 subcommands:
+    - state:
+        about: Show container state.
+        args:
+            - container-id:
+                required: true
+                value_name: id
+                help: Container id.
     - create:
         about: Create a container.
-        version: "0.1.0"
         args:
             - container-id:
                 required: true
@@ -19,9 +25,15 @@ subcommands:
             - bundle:
                 required: true
                 help: Container bundle path.
+    - start:
+        about: Start a container.
+        args:
+            - container-id:
+                required: true
+                value_name: id
+                help: Start a container.
     - run:
         about: run command create a container
-        version: "0.1.0"
         args:
             - bundle:
                 required: true
@@ -31,3 +43,22 @@ subcommands:
                 help: Container exec command.
             - arg:
                 help: Container exec command args.
+    - kill:
+        about: Kill a container.
+        args:
+            - container-id:
+                required: true
+                value_name: id
+                help: Container id.
+            - signal:
+                required: true
+                default_value: TERM
+                takes_value: true
+                help: Send signal to container.
+    - delete:
+        about: Delete a container.
+        args:
+            - container-id:
+                required: true
+                value_name: id
+                help: Container id.
