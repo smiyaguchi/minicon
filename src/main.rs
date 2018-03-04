@@ -61,8 +61,8 @@ fn run() -> Result<()> {
     match matches.subcommand() {
         ("create", Some(create_matches)) => {
             cmd_create(
-                create_matches.value_of("id").unwrap(), 
-                create_matches.value_of("bundle").unwrap(),
+                create_matches.value_of("id").expect("id is fail"), 
+                create_matches.value_of("bundle").expect("bundle is faile"),
                 create_matches
             )  
         }

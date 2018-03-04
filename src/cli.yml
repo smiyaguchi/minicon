@@ -11,28 +11,27 @@ subcommands:
     - state:
         about: Show container state.
         args:
-            - container-id:
+            - id:
                 required: true
-                value_name: id
+                takes_value: true
                 help: Container id.
     - create:
         about: Create a container.
         args:
-            - container-id:
+            - id:
                 required: true
-                value_name: id
                 takes_value: true
                 help: Container id.
             - bundle:
                 required: true
-                defautl_value: .
+                default_value: .
                 help: Container bundle path.
     - start:
         about: Start a container.
         args:
-            - container-id:
+            - id:
                 required: true
-                value_name: id
+                takes_value: true
                 help: Start a container.
     - run:
         about: run command create a container
@@ -48,9 +47,9 @@ subcommands:
     - kill:
         about: Kill a container.
         args:
-            - container-id:
+            - id:
                 required: true
-                value_name: id
+                takes_value: true
                 help: Container id.
             - signal:
                 required: true
@@ -60,7 +59,7 @@ subcommands:
     - delete:
         about: Delete a container.
         args:
-            - container-id:
+            - id:
                 required: true
-                value_name: id
+                takes_value: true
                 help: Container id.
