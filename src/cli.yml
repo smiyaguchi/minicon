@@ -21,9 +21,11 @@ subcommands:
             - container-id:
                 required: true
                 value_name: id
+                takes_value: true
                 help: Container id.
             - bundle:
                 required: true
+                defautl_value: .
                 help: Container bundle path.
     - start:
         about: Start a container.
