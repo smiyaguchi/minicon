@@ -112,10 +112,6 @@ fn cmd_create(id: &str, state_dir: &str, matches: &ArgMatches) -> Result<()> {
                 close(fd)?;  
             }
             unshare(clone_flag)?; 
-            
-            // NOTE: Do get arg
-            // let a: [String; 1] = ["test".to_string()];
-            // exec(matches.value_of("command").unwrap(), &a, &a)?;
         }
         ForkResult::Parent { .. } => {
             wait()?;
