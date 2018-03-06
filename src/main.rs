@@ -23,7 +23,7 @@ use errors::*;
 use lazy_static::initialize;
 use nix::fcntl::{open, OFlag};
 use nix::unistd::chdir;
-use nix::unistd::{fork, ForkResult, execvp, close};
+use nix::unistd::{fork, ForkResult, execvp, close, pipe2};
 use nix::sched::CloneFlags;
 use nix::sched::{setns, unshare};
 use nix::sys::stat::Mode;
@@ -34,6 +34,7 @@ use std::collections::HashMap;
 use std::ffi::CString;
 use std::fs::File;
 use std::fs::create_dir;
+use std::os::unix::io::RawFd;
 use std::path::Path;
 
 lazy_static! {
@@ -88,42 +89,38 @@ fn cmd_create(id: &str, state_dir: &str, matches: &ArgMatches) -> Result<()> {
     let dir = container_dir(state_dir, id);
     create_dir(&dir).chain_err(|| format!("Failed create dir {}", dir))?;
     
-    create_container()?;
+    create_container(&dir)?;
 
     Ok(())  
 }
 
-fn create_container() -> Result<()> {
+fn create_container(container_dir: &str) -> Result<()> {
     let spec = read_config("config.json")?;
-    
+
+    chdir(&*container_dir).chain_err(|| format!("Failed to chdir {}", container_dir))?;
+
+    let (child_pid, wfd) = fork_container_process()?;
+
+    if child_pid != -1 {
+        return Ok(())  
+    }
+        
+    Ok(())  
+}
+
+fn fork_container_process() -> Result<(i32, RawFd)> {
+    let (rfd, wfd) = pipe2(OFlag::O_CLOEXEC).chain_err(|| "Failed to create pipe")?;
     match fork()? {
         ForkResult::Child => {
-            let mut clone_flag = CloneFlags::empty();
-            let mut to_enter = Vec::new();
-            for ns in spec.linux.namespaces {
-                // NOTE: Do namespaces type duplicate to occure error
-
-                if let Some(namespace) = NAMESPACES.get(&*ns.typ) {
-                    if ns.path.is_empty() {
-                        clone_flag.insert(*namespace);  
-                    } else {
-                        let fd = open(&*ns.path, OFlag::empty(), Mode::empty()).chain_err(|| format!("Failed to open file {}", ns.path))?;
-                        to_enter.push((*namespace, fd));  
-                    } 
-                }
-            }
-
-            for &(namespace, fd) in &to_enter {
-                setns(fd, namespace).chain_err(|| format!("Failed to enter {:?}", namespace))?;
-                close(fd)?;  
-            }
-            unshare(clone_flag)?; 
+            close(rfd).chain_err(|| "Failed to close rfd")?;
         }
-        ForkResult::Parent { .. } => {
-            wait()?;
-        }
+        ForkResult::Parent { child } => {
+            close(wfd).chain_err(|| "Faild to close wfd")?;
+            wait()?;  
+            std::process::exit(0);
+        }  
     }
-    Ok(())  
+    Ok((-1, wfd))  
 }
 
 fn cmd_run(_matches: &ArgMatches) -> Result<()> {
