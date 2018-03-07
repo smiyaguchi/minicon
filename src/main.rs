@@ -23,7 +23,7 @@ use errors::*;
 use lazy_static::initialize;
 use nix::fcntl::{open, OFlag};
 use nix::unistd::chdir;
-use nix::unistd::{fork, ForkResult, execvp, close, pipe2};
+use nix::unistd::{fork, ForkResult, execvp, read, close, pipe2};
 use nix::sched::CloneFlags;
 use nix::sched::{setns, unshare};
 use nix::sys::stat::Mode;
@@ -109,14 +109,24 @@ fn create_container(container_dir: &str) -> Result<()> {
 }
 
 fn fork_container_process() -> Result<(i32, RawFd)> {
+    let (tmprfd, tmpwfd) = pipe2(OFlag::O_CLOEXEC).chain_err(|| "Failed to create tmp pipe")?;
     let (rfd, wfd) = pipe2(OFlag::O_CLOEXEC).chain_err(|| "Failed to create pipe")?;
     match fork()? {
         ForkResult::Child => {
             close(rfd).chain_err(|| "Failed to close rfd")?;
+            close(tmprfd).chain_err(|| "Failed to close tmprfd")?;
+            println!("notify to parent");
+            close(tmpwfd)?;
         }
         ForkResult::Parent { child } => {
             close(wfd).chain_err(|| "Faild to close wfd")?;
-            wait()?;  
+            close(tmpwfd).chain_err(|| "Failed to close tmpwfd")?;
+
+            let data: &mut[u8] = &mut[0];
+            while read(tmprfd, data)? != 0 {}
+            println!("receive at child");
+            close(tmprfd)?;
+
             std::process::exit(0);
         }  
     }
