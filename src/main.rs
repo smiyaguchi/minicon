@@ -115,7 +115,6 @@ fn fork_container_process() -> Result<(i32, RawFd)> {
         ForkResult::Child => {
             close(rfd).chain_err(|| "Failed to close rfd")?;
             close(tmprfd).chain_err(|| "Failed to close tmprfd")?;
-            println!("notify to parent");
             close(tmpwfd)?;
         }
         ForkResult::Parent { child } => {
@@ -124,7 +123,6 @@ fn fork_container_process() -> Result<(i32, RawFd)> {
 
             let data: &mut[u8] = &mut[0];
             while read(tmprfd, data)? != 0 {}
-            println!("receive at child");
             close(tmprfd)?;
 
             std::process::exit(0);
