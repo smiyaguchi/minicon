@@ -27,7 +27,6 @@ use nix::unistd::{fork, ForkResult, execvp, read, close, pipe2};
 use nix::sched::CloneFlags;
 use nix::sched::{setns, unshare};
 use nix::sys::stat::Mode;
-use nix::sys::wait::wait;
 use nix_extension::clearenv;
 use oci::Spec;
 use std::collections::HashMap;
@@ -99,7 +98,26 @@ fn create_container(container_dir: &str) -> Result<()> {
 
     chdir(&*container_dir).chain_err(|| format!("Failed to chdir {}", container_dir))?;
 
-    let (child_pid, wfd) = fork_container_process()?;
+    let mut clone_flag = CloneFlags::empty();
+    let mut to_enter = Vec::new();
+    for ns in spec.linux.namespaces {
+        if let Some(namespace) = NAMESPACES.get(&*ns.typ) {
+
+            if ns.path.is_empty() {
+                clone_flag.insert(*namespace);  
+            } else {
+                let fd = open(&*ns.path, OFlag::empty(), Mode::empty()).chain_err(|| format!("Failed to open file {}", ns.path))?; 
+                to_enter.push((*namespace, fd)); 
+            }
+        }
+    }
+
+    let mut userns = false;
+    if clone_flag.contains(CloneFlags::CLONE_NEWUSER) {
+        userns = true;  
+    }
+
+    let (child_pid, wfd) = fork_container_process(userns)?;
 
     if child_pid != -1 {
         return Ok(())  
@@ -108,13 +126,18 @@ fn create_container(container_dir: &str) -> Result<()> {
     Ok(())  
 }
 
-fn fork_container_process() -> Result<(i32, RawFd)> {
+fn fork_container_process(userns: bool) -> Result<(i32, RawFd)> {
     let (tmprfd, tmpwfd) = pipe2(OFlag::O_CLOEXEC).chain_err(|| "Failed to create tmp pipe")?;
     let (rfd, wfd) = pipe2(OFlag::O_CLOEXEC).chain_err(|| "Failed to create pipe")?;
     match fork()? {
         ForkResult::Child => {
             close(rfd).chain_err(|| "Failed to close rfd")?;
             close(tmprfd).chain_err(|| "Failed to close tmprfd")?;
+
+            if userns {
+                unshare(CloneFlags::CLONE_NEWUSER).chain_err(|| "Failed to unshare usernamespace")?;  
+            }
+
             close(tmpwfd)?;
         }
         ForkResult::Parent { child } => {
