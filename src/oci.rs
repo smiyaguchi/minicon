@@ -26,9 +26,9 @@ pub struct IDMapping {
 pub struct Linux {
     pub namespaces: Vec<Namespace>,
     #[serde(rename = "uidMappings")]
-    pub uid_mappings: IDMapping,
+    pub uid_mappings: Vec<IDMapping>,
     #[serde(rename = "gidMappings")]
-    pub gid_mappings: IDMapping,
+    pub gid_mappings: Vec<IDMapping>,
 }
 
 #[derive(Deserialize, Debug)]
