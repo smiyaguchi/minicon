@@ -14,8 +14,21 @@ pub struct Namespace {
 }
 
 #[derive(Deserialize, Debug)]
+pub struct IDMapping {
+    #[serde(rename = "hostID")] 
+    pub host_id: u32,
+    #[serde(rename = "containerID")] 
+    pub container_id: u32,
+    pub size: u32,
+}
+
+#[derive(Deserialize, Debug)]
 pub struct Linux {
     pub namespaces: Vec<Namespace>,
+    #[serde(rename = "uidMappings")]
+    pub uid_mappings: IDMapping,
+    #[serde(rename = "gidMappings")]
+    pub gid_mappings: IDMapping,
 }
 
 #[derive(Deserialize, Debug)]
