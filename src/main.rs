@@ -152,9 +152,11 @@ fn fork_container_process(userns: bool, spec: &Spec) -> Result<(i32, RawFd)> {
 
             let data: &mut[u8] = &mut[0];
             while read(crfd, data)? != 0 {}
-            
-            write_id_mappings(&format!("/proc/{}/uid_map", child), &spec.linux.uid_mappings)?;
-            write_id_mappings(&format!("/proc/{}/gid_map", child), &spec.linux.gid_mappings)?;
+
+            if userns {
+                write_id_mappings(&format!("/proc/{}/uid_map", child), &spec.linux.uid_mappings)?;
+                write_id_mappings(&format!("/proc/{}/gid_map", child), &spec.linux.gid_mappings)?;
+            }            
 
             close(pwfd)?;
             close(crfd)?;
