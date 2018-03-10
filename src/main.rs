@@ -23,12 +23,12 @@ use errors::*;
 use lazy_static::initialize;
 use nix::fcntl::{open, OFlag};
 use nix::unistd::chdir;
-use nix::unistd::{fork, ForkResult, execvp, read, close, pipe2};
+use nix::unistd::{fork, ForkResult, execvp, read, write, close, pipe2};
 use nix::sched::CloneFlags;
-use nix::sched::{setns, unshare};
+use nix::sched::unshare;
 use nix::sys::stat::Mode;
 use nix_extension::clearenv;
-use oci::Spec;
+use oci::{Spec, IDMapping};
 use std::collections::HashMap;
 use std::ffi::CString;
 use std::fs::File;
@@ -100,7 +100,7 @@ fn create_container(container_dir: &str) -> Result<()> {
 
     let mut clone_flag = CloneFlags::empty();
     let mut to_enter = Vec::new();
-    for ns in spec.linux.namespaces {
+    for ns in &spec.linux.namespaces {
         if let Some(namespace) = NAMESPACES.get(&*ns.typ) {
 
             if ns.path.is_empty() {
@@ -117,7 +117,7 @@ fn create_container(container_dir: &str) -> Result<()> {
         userns = true;  
     }
 
-    let (child_pid, wfd) = fork_container_process(userns)?;
+    let (child_pid, wfd) = fork_container_process(userns, &spec)?;
 
     if child_pid != -1 {
         return Ok(())  
@@ -126,32 +126,57 @@ fn create_container(container_dir: &str) -> Result<()> {
     Ok(())  
 }
 
-fn fork_container_process(userns: bool) -> Result<(i32, RawFd)> {
-    let (tmprfd, tmpwfd) = pipe2(OFlag::O_CLOEXEC).chain_err(|| "Failed to create tmp pipe")?;
+fn fork_container_process(userns: bool, spec: &Spec) -> Result<(i32, RawFd)> {
+    let (crfd, cwfd) = pipe2(OFlag::O_CLOEXEC).chain_err(|| "Failed to create child pipe")?;
+    let (prfd, pwfd) = pipe2(OFlag::O_CLOEXEC).chain_err(|| "Failed to create parent pipe")?;
     let (rfd, wfd) = pipe2(OFlag::O_CLOEXEC).chain_err(|| "Failed to create pipe")?;
     match fork()? {
         ForkResult::Child => {
             close(rfd).chain_err(|| "Failed to close rfd")?;
-            close(tmprfd).chain_err(|| "Failed to close tmprfd")?;
+            close(crfd)?;
+            close(pwfd)?;
 
             if userns {
                 unshare(CloneFlags::CLONE_NEWUSER).chain_err(|| "Failed to unshare usernamespace")?;  
             }
+            close(cwfd)?;
 
-            close(tmpwfd)?;
+            let data: &mut[u8] = &mut[0];
+            while read(prfd, data)? != 0 {}
+            close(prfd)?;
         }
         ForkResult::Parent { child } => {
             close(wfd).chain_err(|| "Faild to close wfd")?;
-            close(tmpwfd).chain_err(|| "Failed to close tmpwfd")?;
+            close(cwfd)?;
+            close(prfd)?;
 
             let data: &mut[u8] = &mut[0];
-            while read(tmprfd, data)? != 0 {}
-            close(tmprfd)?;
+            while read(crfd, data)? != 0 {}
+            
+            write_id_mappings(&format!("/proc/{}/uid_map", child), &spec.linux.uid_mappings)?;
+            write_id_mappings(&format!("/proc/{}/gid_map", child), &spec.linux.gid_mappings)?;
+
+            close(pwfd)?;
+            close(crfd)?;
 
             std::process::exit(0);
         }  
     }
     Ok((-1, wfd))  
+}
+
+fn write_id_mappings(path: &str, id_mappings: &[IDMapping]) -> Result<()> {
+    let mut data = String::new();
+    for m in id_mappings {
+        let value = format!("{} {} {}\n", m.container_id, m.host_id, m.size);
+        data = data + &value;  
+    }
+    if !data.is_empty() {
+        let fd = open(path, OFlag::O_WRONLY, Mode::empty())?;
+        write(fd, data.as_bytes())?;  
+        close(fd).unwrap();
+    }
+    Ok(()) 
 }
 
 fn cmd_run(_matches: &ArgMatches) -> Result<()> {
