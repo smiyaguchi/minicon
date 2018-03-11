@@ -127,6 +127,11 @@ fn create_container(container_dir: &str) -> Result<()> {
         setns(fd, namespace).chain_err(|| "Failed to setns")?;
         close(fd)?;  
     }
+
+    if userns {
+        clone_flag.remove(CloneFlags::CLONE_NEWUSER);  
+    }
+    unshare(clone_flag).chain_err(|| "Faile to unshare")?;
         
     Ok(())  
 }
