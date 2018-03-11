@@ -25,7 +25,7 @@ use nix::fcntl::{open, OFlag};
 use nix::unistd::chdir;
 use nix::unistd::{fork, ForkResult, execvp, read, write, close, pipe2};
 use nix::sched::CloneFlags;
-use nix::sched::unshare;
+use nix::sched::{setns, unshare};
 use nix::sys::stat::Mode;
 use nix_extension::clearenv;
 use oci::{Spec, IDMapping};
@@ -121,6 +121,11 @@ fn create_container(container_dir: &str) -> Result<()> {
 
     if child_pid != -1 {
         return Ok(())  
+    }
+
+    for &(namespace, fd) in &to_enter {
+        setns(fd, namespace).chain_err(|| "Failed to setns")?;
+        close(fd)?;  
     }
         
     Ok(())  
