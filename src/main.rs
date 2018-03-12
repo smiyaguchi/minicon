@@ -131,7 +131,7 @@ fn create_container(container_dir: &str) -> Result<()> {
     if userns {
         clone_flag.remove(CloneFlags::CLONE_NEWUSER);  
     }
-    unshare(clone_flag).chain_err(|| "Faile to unshare")?;
+    unshare(clone_flag).chain_err(|| "Failed to unshare")?;
         
     Ok(())  
 }
