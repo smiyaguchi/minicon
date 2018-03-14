@@ -100,9 +100,13 @@ fn create_container(container_dir: &str) -> Result<()> {
 
     let mut clone_flag = CloneFlags::empty();
     let mut to_enter = Vec::new();
+    let mut is_pid = false;
     for ns in &spec.linux.namespaces {
-        if let Some(namespace) = NAMESPACES.get(&*ns.typ) {
+        if ns.typ == "pid" {
+            is_pid = true;      
+        }
 
+        if let Some(namespace) = NAMESPACES.get(&*ns.typ) {
             if ns.path.is_empty() {
                 clone_flag.insert(*namespace);  
             } else {
@@ -188,6 +192,17 @@ fn write_id_mappings(path: &str, id_mappings: &[IDMapping]) -> Result<()> {
         write(fd, data.as_bytes())?;  
         close(fd).unwrap();
     }
+    Ok(()) 
+}
+
+fn fork_pid_ns() -> Result<()> {
+    let (rfd, wfd) = pipe2(OFlag::O_CLOEXEC).chain_err(|| "Failed to create pipe")?;
+    match fork()? {
+        ForkResult::Child => {
+        }
+        ForkResult::Parent { child } => {
+        }  
+    } 
     Ok(()) 
 }
 
