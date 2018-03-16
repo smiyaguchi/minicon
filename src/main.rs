@@ -23,7 +23,7 @@ use errors::*;
 use lazy_static::initialize;
 use nix::fcntl::{open, OFlag};
 use nix::unistd::chdir;
-use nix::unistd::{fork, ForkResult, execvp, read, write, close, pipe2};
+use nix::unistd::{fork, ForkResult, execvp, read, write, close, pipe2, setsid};
 use nix::sched::CloneFlags;
 use nix::sched::{setns, unshare};
 use nix::sys::stat::Mode;
@@ -140,6 +140,8 @@ fn create_container(container_dir: &str) -> Result<()> {
         clone_flag.remove(CloneFlags::CLONE_NEWUSER);  
     }
     unshare(clone_flag).chain_err(|| "Failed to unshare other namespace")?;
+
+    setsid()?; 
         
     Ok(())  
 }
