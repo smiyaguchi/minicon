@@ -105,8 +105,14 @@ fn create_container(container_dir: &str) -> Result<()> {
             if ns.path.is_empty() {
                 clone_flag.insert(*namespace);  
             } else {
-                let fd = open(&*ns.path, OFlag::empty(), Mode::empty()).chain_err(|| format!("Failed to open file {}", ns.path))?; 
-                to_enter.push((*namespace, fd)); 
+                let fd = open(&*ns.path, OFlag::empty(), Mode::empty()).chain_err(|| format!("Failed to open file {}", ns.path))?;
+                
+                if ns.typ == "pid" {
+                    setns(fd, CloneFlags::CLONE_NEWPID)?;   
+                    close(fd)?; 
+                } else {
+                    to_enter.push((*namespace, fd)); 
+                } 
             }
         }
     }
