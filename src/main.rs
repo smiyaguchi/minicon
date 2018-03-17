@@ -27,7 +27,7 @@ use nix::unistd::{fork, ForkResult, execvp, read, write, close, pipe2, setsid};
 use nix::sched::CloneFlags;
 use nix::sched::{setns, unshare};
 use nix::sys::stat::Mode;
-use nix_extension::clearenv;
+use nix_extension::{clearenv, putenv};
 use oci::{Spec, IDMapping};
 use std::collections::HashMap;
 use std::ffi::CString;
@@ -142,13 +142,11 @@ fn create_container(container_dir: &str) -> Result<()> {
         setns(fd, namespace).chain_err(|| "Failed to setns")?;
         close(fd)?;  
     }
-
-    if userns {
-        clone_flag.remove(CloneFlags::CLONE_NEWUSER);  
-    }
     unshare(clone_flag).chain_err(|| "Failed to unshare other namespace")?;
 
-    setsid()?; 
+    setsid()?;
+    
+    exec(&spec.process.args[0], &spec.process.args, &spec.process.env)?; 
         
     Ok(())  
 }
@@ -231,17 +229,17 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<Spec> {
 }
 
 fn exec(path: &str, args: &[String], env: &[String]) -> Result<()> {
-    clearenv()?;
-
-    // NOTE: Do putenv
-
     let p: CString = CString::new(path.to_string()).unwrap();
     let a: Vec<CString> = args.iter()
         .map(|s| CString::new(s.to_string()).unwrap_or_default())
         .collect();
-    let _env: Vec<CString> = env.iter()
+    let env: Vec<CString> = env.iter()
         .map(|s| CString::new(s.to_string()).unwrap_or_default())
         .collect();
+    clearenv()?;
+    for e in &env {
+        putenv(e)?;  
+    }
     execvp(&p, &a).chain_err(|| "Failed to exec")?;
     Ok(())
 }
