@@ -1,4 +1,20 @@
 #[derive(Deserialize, Debug)]
+pub struct ConsoleSize {
+    pub height: u64,
+    pub width: u64  
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Process {
+    pub terminal: bool,
+    #[serde(rename = "consoleSize")]
+    pub console_size: ConsoleSize,
+    pub cwd: String,
+    pub env: Vec<String>,
+    pub args: Vec<String>,  
+}
+
+#[derive(Deserialize, Debug)]
 pub struct Root {
     pub path: String,
     #[serde(rename = "readonly")]
@@ -36,5 +52,6 @@ pub struct Spec {
     #[serde(rename = "ociVersion")]
     pub oci_version: String,
     pub root: Root,
+    pub process: Process,
     pub linux: Linux,
 }
