@@ -100,9 +100,15 @@ fn create_container(container_dir: &str) -> Result<()> {
 
     let mut clone_flag = CloneFlags::empty();
     let mut to_enter = Vec::new();
+    let mut userns = false;
+
     for ns in &spec.linux.namespaces {
         if let Some(namespace) = NAMESPACES.get(&*ns.typ) {
             if ns.path.is_empty() {
+                if ns.typ == "user" {
+                    userns = true;
+                    continue;  
+                }
                 clone_flag.insert(*namespace);  
             } else {
                 let fd = open(&*ns.path, OFlag::empty(), Mode::empty()).chain_err(|| format!("Failed to open file {}", ns.path))?;
@@ -110,21 +116,16 @@ fn create_container(container_dir: &str) -> Result<()> {
                 if ns.typ == "pid" {
                     setns(fd, CloneFlags::CLONE_NEWPID)?;   
                     close(fd)?; 
-                } else {
-                    to_enter.push((*namespace, fd)); 
+                    continue;
                 } 
+                to_enter.push((*namespace, fd)); 
             }
         }
     }
 
-    let mut userns = false;
-    if clone_flag.contains(CloneFlags::CLONE_NEWUSER) {
-        userns = true;  
-    }
-
-    let mut is_pid = false;
+    let mut pidns = false;
     if clone_flag.contains(CloneFlags::CLONE_NEWPID) {
-        is_pid = true;
+        pidns = true;
     }
 
     let (child_pid, wfd) = fork_container_process(userns, &spec)?;
@@ -133,7 +134,7 @@ fn create_container(container_dir: &str) -> Result<()> {
         return Ok(())  
     }
 
-    if is_pid {
+    if pidns {
         fork_pid_ns()?;  
     }
 
