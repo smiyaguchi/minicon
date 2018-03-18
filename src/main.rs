@@ -68,6 +68,12 @@ fn run() -> Result<()> {
                 create_matches
             )  
         }
+        ("start", Some(start_matches)) => {
+            cmd_start(
+                start_matches.value_of("id").unwrap(),
+                &state_dir
+            )  
+        }
         ("run", Some(run_matches)) => {
             cmd_run(run_matches) 
         }
@@ -209,13 +215,18 @@ fn write_id_mappings(path: &str, id_mappings: &[IDMapping]) -> Result<()> {
 fn fork_pid_ns() -> Result<()> {
     match fork()? {
         ForkResult::Child => {
-          // continue process
+            // continue process
         }
         ForkResult::Parent { .. } => {
             std::process::exit(0);
         }  
     } 
     Ok(()) 
+}
+
+fn cmd_start(id: &str, state_dir: &str) -> Result<()> {
+    // TODO: Do impl
+    Ok(())
 }
 
 fn cmd_run(_matches: &ArgMatches) -> Result<()> {

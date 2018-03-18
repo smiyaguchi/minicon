@@ -35,6 +35,14 @@ subcommands:
                 required: true
                 takes_value: true
                 value_name: container-id
+                help: Container id.
+    - start:
+        about: Start a container.
+        args:
+            - id:
+                required: true
+                takes_value: true
+                value_name: container-id
                 help: Start a container.
     - run:
         about: run command create a container
