@@ -134,15 +134,15 @@ fn create_container(container_dir: &str) -> Result<()> {
         return Ok(())  
     }
 
-    if pidns {
-        fork_pid_ns()?;  
-    }
-
     for &(namespace, fd) in &to_enter {
         setns(fd, namespace).chain_err(|| "Failed to setns")?;
         close(fd)?;  
     }
     unshare(clone_flag).chain_err(|| "Failed to unshare other namespace")?;
+
+    if pidns {
+        fork_pid_ns()?;  
+    }
 
     setsid()?;
     
