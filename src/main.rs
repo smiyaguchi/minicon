@@ -159,6 +159,8 @@ fn create_container(container_dir: &str) -> Result<()> {
     bind(sfd, &SockAddr::Unix(UnixAddr::new(&*socket_url)?))?;
     listen(sfd, 1)?;
     let afd = accept(sfd)?;
+    let data: &mut [u8] = &mut [0];
+    read(afd, data)?;
 
     close(afd)?;
     close(sfd)?;
