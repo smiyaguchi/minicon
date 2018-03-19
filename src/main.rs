@@ -26,6 +26,8 @@ use nix::unistd::chdir;
 use nix::unistd::{fork, ForkResult, execvp, read, write, close, pipe2, setsid};
 use nix::sched::CloneFlags;
 use nix::sched::{setns, unshare};
+use nix::sys::socket::{socket, bind, listen, accept, connect};
+use nix::sys::socket::{SockAddr, UnixAddr, AddressFamily, SockType, SockFlag};
 use nix::sys::stat::Mode;
 use nix_extension::{clearenv, putenv};
 use oci::{Spec, IDMapping};
@@ -151,6 +153,15 @@ fn create_container(container_dir: &str) -> Result<()> {
     }
 
     setsid()?;
+
+    let socket_url = "endpoint";
+    let sfd = socket(AddressFamily::Unix, SockType::Stream, SockFlag::empty(), None)?;
+    bind(sfd, &SockAddr::Unix(UnixAddr::new(&*socket_url)?))?;
+    listen(sfd, 1)?;
+    let afd = accept(sfd)?;
+
+    close(afd)?;
+    close(sfd)?;
     
     exec(&spec.process.args[0], &spec.process.args, &spec.process.env)?; 
         
@@ -225,7 +236,16 @@ fn fork_pid_ns() -> Result<()> {
 }
 
 fn cmd_start(id: &str, state_dir: &str) -> Result<()> {
-    // TODO: Do impl
+    let dir = container_dir(state_dir, id);
+    chdir(&*dir).chain_err(|| format!("Failed change dir {}", dir))?;
+
+    let socket_url = "endpoint";
+    let sfd = socket(AddressFamily::Unix, SockType::Stream, SockFlag::empty(), None)?;
+    connect(sfd, &SockAddr::Unix(UnixAddr::new(&*socket_url)?))?;
+    let data: &[u8] = &[0];
+    write(sfd, data).chain_err(|| "Failed write to socket")?;
+    close(sfd)?;
+
     Ok(())
 }
 
