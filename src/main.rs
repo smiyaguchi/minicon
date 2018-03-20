@@ -164,6 +164,8 @@ fn create_container(container_dir: &str) -> Result<()> {
 
     close(afd)?;
     close(sfd)?;
+
+    chdir(&*spec.process.cwd)?;
     
     exec(&spec.process.args[0], &spec.process.args, &spec.process.env)?; 
         
