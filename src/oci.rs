@@ -53,5 +53,6 @@ pub struct Spec {
     pub oci_version: String,
     pub root: Root,
     pub process: Process,
+    pub hostname: String,
     pub linux: Linux,
 }

@@ -22,7 +22,7 @@ use clap::{App, ArgMatches};
 use errors::*;
 use lazy_static::initialize;
 use nix::fcntl::{open, OFlag};
-use nix::unistd::chdir;
+use nix::unistd::{chdir, sethostname};
 use nix::unistd::{fork, ForkResult, execvp, read, write, close, pipe2, setsid};
 use nix::sched::CloneFlags;
 use nix::sched::{setns, unshare};
@@ -150,6 +150,10 @@ fn create_container(container_dir: &str) -> Result<()> {
 
     if pidns {
         fork_pid_ns()?;  
+    }
+
+    if clone_flag.contains(CloneFlags::CLONE_NEWUTS) {
+        sethostname(&spec.hostname)?;
     }
 
     setsid()?;
