@@ -36,25 +36,6 @@ subcommands:
                 takes_value: true
                 value_name: container-id
                 help: Container id.
-    - start:
-        about: Start a container.
-        args:
-            - id:
-                required: true
-                takes_value: true
-                value_name: container-id
-                help: Start a container.
-    - run:
-        about: run command create a container
-        args:
-            - bundle:
-                required: true
-                help: Container bundle path.
-            - command:
-                required: true
-                help: Container exec command.
-            - arg:
-                help: Container exec command args.
     - kill:
         about: Kill a container.
         args:

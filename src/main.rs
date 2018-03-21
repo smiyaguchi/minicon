@@ -76,9 +76,6 @@ fn run() -> Result<()> {
                 &state_dir
             )  
         }
-        ("run", Some(run_matches)) => {
-            cmd_run(run_matches) 
-        }
         _ => bail!("Command nod recognized."), 
     }
 }
@@ -255,10 +252,6 @@ fn cmd_start(id: &str, state_dir: &str) -> Result<()> {
     close(sfd)?;
 
     Ok(())
-}
-
-fn cmd_run(_matches: &ArgMatches) -> Result<()> {
-    Ok(())  
 }
 
 fn read_config<P: AsRef<Path>>(path: P) -> Result<Spec> {
