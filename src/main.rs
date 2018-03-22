@@ -93,12 +93,12 @@ fn cmd_create(id: &str, state_dir: &str, matches: &ArgMatches) -> Result<()> {
     let dir = container_dir(state_dir, id);
     create_dir(&dir).chain_err(|| format!("Failed create dir {}", dir))?;
     
-    create_container(&dir)?;
+    run_container(&dir)?;
 
     Ok(())  
 }
 
-fn create_container(container_dir: &str) -> Result<()> {
+fn run_container(container_dir: &str) -> Result<()> {
     let spec = read_config("config.json")?;
 
     chdir(&*container_dir).chain_err(|| format!("Failed to chdir {}", container_dir))?;
