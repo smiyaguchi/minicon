@@ -63,6 +63,12 @@ fn run() -> Result<()> {
     let state_dir = matches.value_of("root").unwrap().to_string();
 
     match matches.subcommand() {
+        ("state", Some(state_matches)) => {
+            cmd_state(
+                state_matches.value_of("id").unwrap(),
+                &state_dir
+            )    
+        }
         ("create", Some(create_matches)) => {
             cmd_create(
                 create_matches.value_of("id").unwrap(), 
@@ -82,6 +88,13 @@ fn run() -> Result<()> {
 
 fn container_dir(root: &str, id: &str) -> String {
     format!("{}/{}", root, id)  
+}
+
+fn cmd_state(id: &str, state_dir: &str) -> Result<()> {
+    let dir = container_dir(state_dir, id);
+    chdir(&*dir).chain_err(|| format!("Failed to chdir {}", dir))?;
+    
+    Ok(())       
 }
 
 fn cmd_create(id: &str, state_dir: &str, matches: &ArgMatches) -> Result<()> {

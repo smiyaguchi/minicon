@@ -1,6 +1,17 @@
 use std::collections::HashMap;
 
 #[derive(Deserialize, Debug)]
+pub struct State {
+    #[serde(rename = "ociVersion")]
+    pub oci_version: String,
+    pub id: String,
+    pub status: String,
+    pub pid: i32,
+    pub bundle: String,
+    pub annotations: HashMap<String, String>,    
+}
+
+#[derive(Deserialize, Debug)]
 pub struct ConsoleSize {
     pub height: u64,
     pub width: u64  
