@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[derive(Deserialize, Debug)]
 pub struct ConsoleSize {
     pub height: u64,
@@ -55,4 +57,5 @@ pub struct Spec {
     pub process: Process,
     pub hostname: String,
     pub linux: Linux,
+    pub annotations: HashMap<String, String>,
 }
