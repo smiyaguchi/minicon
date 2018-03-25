@@ -146,7 +146,7 @@ fn run_container(container_dir: &str) -> Result<()> {
         pidns = true;
     }
 
-    let (child_pid, wfd) = fork_container_process(userns, &spec)?;
+    let (child_pid, _wfd) = fork_container_process(userns, &spec)?;
 
     if child_pid != -1 {
         return Ok(())  
