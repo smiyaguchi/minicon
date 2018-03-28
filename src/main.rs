@@ -217,7 +217,9 @@ fn fork_container_process(userns: bool, spec: &Spec) -> Result<(i32, RawFd)> {
             if userns {
                 write_id_mappings(&format!("/proc/{}/uid_map", child), &spec.linux.uid_mappings)?;
                 write_id_mappings(&format!("/proc/{}/gid_map", child), &spec.linux.gid_mappings)?;
-            }            
+            }
+
+            cgroup::init();
 
             close(pwfd)?;
             close(crfd)?;
