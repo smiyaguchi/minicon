@@ -35,7 +35,7 @@ use oci::{Spec, IDMapping};
 use std::collections::HashMap;
 use std::ffi::CString;
 use std::fs::File;
-use std::fs::create_dir;
+use std::fs::create_dir_all;
 use std::os::unix::io::RawFd;
 use std::path::Path;
 
@@ -105,7 +105,7 @@ fn cmd_create(id: &str, state_dir: &str, matches: &ArgMatches) -> Result<()> {
     chdir(&*bundle).chain_err(|| format!("Failed to chdir {}", bundle))?;
 
     let dir = container_dir(state_dir, id);
-    create_dir(&dir).chain_err(|| format!("Failed create dir {}", dir))?;
+    create_dir_all(&dir).chain_err(|| format!("Failed create dir {}", dir))?;
     
     run_container(&dir)?;
 
