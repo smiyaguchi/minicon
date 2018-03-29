@@ -16,3 +16,17 @@ pub fn putenv(string: &CString) -> Result<()> {
     let res = unsafe { libc::putenv(ptr as *mut libc::c_char) };
     Errno::result(res).map(drop)  
 }
+
+#[inline]
+pub fn setrlimit(
+    resource: libc::c_int,
+    soft: libc::c_ulonglong,
+    hard: libc::c_ulonglong,
+) -> Result<()> {
+    let rlim = &libc::rlimit {
+        rlim_cur: soft,
+        rlim_max: hard,
+    };
+    let res = unsafe { libc::setrlimit(resource, rlim) };
+    Errno::result(res).map(drop)
+}

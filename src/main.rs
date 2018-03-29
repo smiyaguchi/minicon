@@ -30,7 +30,7 @@ use nix::sched::{setns, unshare};
 use nix::sys::socket::{socket, bind, listen, accept, connect};
 use nix::sys::socket::{SockAddr, UnixAddr, AddressFamily, SockType, SockFlag};
 use nix::sys::stat::Mode;
-use nix_extension::{clearenv, putenv};
+use nix_extension::{clearenv, putenv, setrlimit};
 use oci::{Spec, IDMapping};
 use std::collections::HashMap;
 use std::ffi::CString;
@@ -196,6 +196,10 @@ fn fork_container_process(userns: bool, spec: &Spec) -> Result<(i32, RawFd)> {
             close(rfd).chain_err(|| "Failed to close rfd")?;
             close(crfd)?;
             close(pwfd)?;
+
+            for rlimit in &spec.process.rlimits {
+                setrlimit(rlimit.typ as i32, rlimit.soft, rlimit.hard)?;
+            }
 
             if userns {
                 unshare(CloneFlags::CLONE_NEWUSER).chain_err(|| "Failed to unshare usernamespace")?;  

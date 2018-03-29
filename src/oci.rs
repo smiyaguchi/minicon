@@ -17,6 +17,34 @@ pub struct ConsoleSize {
     pub width: u64  
 }
 
+#[derive(Deserialize, Debug, Clone, Copy)]
+pub enum RlimitType {
+    RLIMIT_CPU,
+    RLIMIT_FSIZE,
+    RLIMIT_DATA,
+    RLIMIT_STACK,
+    RLIMIT_CORE,
+    RLIMIT_RSS,
+    RLIMIT_NPROC,
+    RLIMIT_NOFILE,
+    RLIMIT_MEMLOCK,
+    RLIMIT_AS,
+    RLIMIT_LOCKS,
+    RLIMIT_SIGPENDING,
+    RLIMIT_MSGQUEUE,
+    RLIMIT_NICE,
+    RLIMIT_RTPRIO,
+    RLIMIT_RTTIME,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Rlimit {
+    #[serde(rename = "type")]
+    pub typ: RlimitType,
+    pub soft: u64,
+    pub hard: u64,
+}
+
 #[derive(Deserialize, Debug)]
 pub struct Process {
     pub terminal: bool,
@@ -24,7 +52,8 @@ pub struct Process {
     pub console_size: ConsoleSize,
     pub cwd: String,
     pub env: Vec<String>,
-    pub args: Vec<String>,  
+    pub args: Vec<String>, 
+    pub rlimits: Vec<Rlimit>,
 }
 
 #[derive(Deserialize, Debug)]
