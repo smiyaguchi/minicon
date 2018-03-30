@@ -54,6 +54,8 @@ pub struct Process {
     pub env: Vec<String>,
     pub args: Vec<String>, 
     pub rlimits: Vec<Rlimit>,
+    #[serde(rename = "oomScoreAdj")]
+    pub oom_score_adj: Option<i32>,
 }
 
 #[derive(Deserialize, Debug)]

@@ -36,6 +36,7 @@ use std::collections::HashMap;
 use std::ffi::CString;
 use std::fs::File;
 use std::fs::create_dir_all;
+use std::io::Write;
 use std::os::unix::io::RawFd;
 use std::path::Path;
 
@@ -196,6 +197,12 @@ fn fork_container_process(userns: bool, spec: &Spec) -> Result<(i32, RawFd)> {
             close(rfd).chain_err(|| "Failed to close rfd")?;
             close(crfd)?;
             close(pwfd)?;
+
+            let p = &spec.process;
+            if let Some(adj) = p.oom_score_adj {
+                let mut f = File::create("/proc/self/oom_score_adj")?;
+                f.write_all(adj.to_string().as_bytes())?;
+            }
 
             for rlimit in &spec.process.rlimits {
                 setrlimit(rlimit.typ as i32, rlimit.soft, rlimit.hard)?;
