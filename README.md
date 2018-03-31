@@ -5,7 +5,7 @@ Minimal container runtime.
 Minicon is oci-compliant container runtime.
 
 ## Requirements
-* Ubuntu 17.10
+* Ubuntu 17.10 LTS
 * Rust 1.24.0
 
 ## License
