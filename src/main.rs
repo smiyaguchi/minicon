@@ -55,7 +55,7 @@ lazy_static! {
 }
 
 fn main() {
-    run().expect("Failed exec minicon");
+    run().expect("Failed run minicon");
 }
 
 fn run() -> Result<()> {
