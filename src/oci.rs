@@ -46,6 +46,15 @@ pub struct Rlimit {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct Capability {
+    pub effective: Vec<String>,
+    pub bounding: Vec<String>,
+    pub inheritable: Vec<String>,
+    pub permitted: Vec<String>,
+    pub ambient: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Process {
     pub terminal: bool,
     #[serde(rename = "consoleSize")]
@@ -54,6 +63,7 @@ pub struct Process {
     pub env: Vec<String>,
     pub args: Vec<String>, 
     pub rlimits: Vec<Rlimit>,
+    pub capabilities: Vec<Capability>,
     #[serde(rename = "oomScoreAdj")]
     pub oom_score_adj: Option<i32>,
 }
