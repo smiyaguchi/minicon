@@ -55,6 +55,14 @@ pub struct Capability {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct User {
+    pub uid: u64,
+    pub gid: u64,
+    #[serde(rename = "additionalGids")]
+    pub additional_gids: Vec<u64>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Process {
     pub terminal: bool,
     #[serde(rename = "consoleSize")]
@@ -64,8 +72,12 @@ pub struct Process {
     pub args: Vec<String>, 
     pub rlimits: Vec<Rlimit>,
     pub capabilities: Vec<Capability>,
+    #[serde(rename = "noNewPrivileges")]
+    pub no_new_privileges: bool,
     #[serde(rename = "oomScoreAdj")]
     pub oom_score_adj: Option<i32>,
+    #[serde(rename = "selinuxLabel")]
+    pub selinux_label: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
