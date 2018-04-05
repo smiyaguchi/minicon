@@ -84,6 +84,19 @@ fn run() -> Result<()> {
                 &state_dir
             )  
         }
+        ("kill", Some(kill_matches)) => {
+            cmd_kill(
+                kill_matches.value_of("id").unwrap(),
+                &state_dir,
+                kill_matches.value_of("signal").unwrap()
+            )
+        }
+        ("delete", Some(delete_matches)) => {
+            cmd_delete(
+                delete_matches.value_of("id").unwrap(),
+                &state_dir
+            )
+        }
         _ => bail!("Command nod recognized."), 
     }
 }
@@ -278,6 +291,14 @@ fn cmd_start(id: &str, state_dir: &str) -> Result<()> {
     write(sfd, data).chain_err(|| "Failed write to socket")?;
     close(sfd)?;
 
+    Ok(())
+}
+
+fn cmd_kill(id: &str, state_dir: &str, signal: &str) -> Result<()> {
+    Ok(())
+}
+
+fn cmd_delete(id: &str, state_dir: &str) -> Result<()> {
     Ok(())
 }
 
