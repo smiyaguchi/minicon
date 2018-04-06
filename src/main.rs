@@ -97,7 +97,7 @@ fn run() -> Result<()> {
                 &state_dir
             )
         }
-        _ => bail!("Command nod recognized."), 
+        _ => bail!("Command not recognized."), 
     }
 }
 
@@ -171,7 +171,7 @@ fn run_container(container_dir: &str) -> Result<()> {
         setns(fd, namespace).chain_err(|| "Failed to setns")?;
         close(fd)?;  
     }
-    unshare(clone_flag).chain_err(|| "Failed to unshare other namespace")?;
+    unshare(clone_flag).chain_err(|| "Failed to unshare namespace")?;
 
     if pidns {
         fork_pid_ns()?;  
