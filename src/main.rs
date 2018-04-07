@@ -222,7 +222,7 @@ fn fork_container_process(userns: bool, spec: &Spec) -> Result<(i32, RawFd)> {
             }
 
             if userns {
-                unshare(CloneFlags::CLONE_NEWUSER).chain_err(|| "Failed to unshare usernamespace")?;  
+                unshare(CloneFlags::CLONE_NEWUSER).chain_err(|| "Failed to unshare user namespace")?;  
             }
             close(cwfd)?;
 
@@ -288,7 +288,7 @@ fn cmd_start(id: &str, state_dir: &str) -> Result<()> {
     let sfd = socket(AddressFamily::Unix, SockType::Stream, SockFlag::empty(), None)?;
     connect(sfd, &SockAddr::Unix(UnixAddr::new(&*socket_url)?))?;
     let data: &[u8] = &[0];
-    write(sfd, data).chain_err(|| "Failed write to socket")?;
+    write(sfd, data).chain_err(|| "Failed to write socket")?;
     close(sfd)?;
 
     Ok(())
