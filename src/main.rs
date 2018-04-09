@@ -18,6 +18,7 @@ mod cgroup;
 mod errors;
 mod nix_extension;
 mod oci;
+mod pipe;
 
 use clap::{App, ArgMatches};
 use errors::*;
@@ -32,6 +33,7 @@ use nix::sys::socket::{SockAddr, UnixAddr, AddressFamily, SockType, SockFlag};
 use nix::sys::stat::Mode;
 use nix_extension::{clearenv, putenv, setrlimit};
 use oci::{Spec, IDMapping};
+use pipe::Pipe;
 use std::collections::HashMap;
 use std::ffi::CString;
 use std::fs::File;
@@ -202,14 +204,12 @@ fn run_container(container_dir: &str) -> Result<()> {
 }
 
 fn fork_container_process(userns: bool, spec: &Spec) -> Result<(i32, RawFd)> {
-    let (crfd, cwfd) = pipe2(OFlag::O_CLOEXEC).chain_err(|| "Failed to create child pipe")?;
-    let (prfd, pwfd) = pipe2(OFlag::O_CLOEXEC).chain_err(|| "Failed to create parent pipe")?;
+    let child_pipe = pipe::Pipe::new().chain_err(|| "Failed to create child pipe")?;
+    let parent_pipe = pipe::Pipe::new().chain_err(|| "Failed to create parent pipe")?;
     let (rfd, wfd) = pipe2(OFlag::O_CLOEXEC).chain_err(|| "Failed to create pipe")?;
     match fork()? {
         ForkResult::Child => {
             close(rfd).chain_err(|| "Failed to close rfd")?;
-            close(crfd)?;
-            close(pwfd)?;
 
             let p = &spec.process;
             if let Some(adj) = p.oom_score_adj {
@@ -224,19 +224,12 @@ fn fork_container_process(userns: bool, spec: &Spec) -> Result<(i32, RawFd)> {
             if userns {
                 unshare(CloneFlags::CLONE_NEWUSER).chain_err(|| "Failed to unshare user namespace")?;  
             }
-            close(cwfd)?;
-
-            let data: &mut[u8] = &mut[0];
-            while read(prfd, data)? != 0 {}
-            close(prfd)?;
+            child_pipe.notify().chain_err(|| "Failed to notify parent")?;
+            parent_pipe.wait().chain_err(|| "Failed to wait parent")?;
         }
         ForkResult::Parent { child } => {
             close(wfd).chain_err(|| "Faild to close wfd")?;
-            close(cwfd)?;
-            close(prfd)?;
-
-            let data: &mut[u8] = &mut[0];
-            while read(crfd, data)? != 0 {}
+            child_pipe.wait().chain_err(|| "Failed to wait child")?; 
 
             if userns {
                 write_id_mappings(&format!("/proc/{}/uid_map", child), &spec.linux.uid_mappings)?;
@@ -245,8 +238,7 @@ fn fork_container_process(userns: bool, spec: &Spec) -> Result<(i32, RawFd)> {
 
             cgroup::init();
 
-            close(pwfd)?;
-            close(crfd)?;
+            parent_pipe.notify().chain_err(|| "Failed to notify child")?;
 
             std::process::exit(0);
         }  
