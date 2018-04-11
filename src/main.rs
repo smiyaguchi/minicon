@@ -16,6 +16,7 @@ extern crate serde_json;
 
 mod cgroup;
 mod errors;
+mod mount;
 mod nix_extension;
 mod oci;
 mod pipe;
@@ -23,6 +24,7 @@ mod pipe;
 use clap::{App, ArgMatches};
 use errors::*;
 use lazy_static::initialize;
+use mount::do_pivot_root;
 use nix::fcntl::{open, OFlag};
 use nix::unistd::{chdir, sethostname};
 use nix::unistd::{fork, ForkResult, execvp, read, write, close, pipe2, setsid};
@@ -37,7 +39,7 @@ use pipe::Pipe;
 use std::collections::HashMap;
 use std::ffi::CString;
 use std::fs::File;
-use std::fs::create_dir_all;
+use std::fs::{create_dir_all, canonicalize};
 use std::io::Write;
 use std::os::unix::io::RawFd;
 use std::path::Path;
@@ -181,6 +183,13 @@ fn run_container(container_dir: &str) -> Result<()> {
 
     if clone_flag.contains(CloneFlags::CLONE_NEWUTS) {
         sethostname(&spec.hostname)?;
+    }
+
+    if clone_flag.contains(CloneFlags::CLONE_NEWNS) {
+        let rootfs = canonicalize(&spec.root.path).chain_err(|| "Failed to canonicalize")?
+                        .to_string_lossy()
+                        .into_owned();
+        do_pivot_root(&*rootfs)?;
     }
 
     setsid()?;
