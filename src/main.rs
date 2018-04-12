@@ -207,7 +207,7 @@ fn run_container(container_dir: &str) -> Result<()> {
 
     chdir(&*spec.process.cwd)?;
     
-    exec_process(&spec.process.args[0], &spec.process.args, &spec.process.env)?; 
+    do_exec(&spec.process.args[0], &spec.process.args, &spec.process.env)?; 
         
     Ok(())  
 }
@@ -309,7 +309,7 @@ fn read_config<P: AsRef<Path>>(path: P) -> Result<Spec> {
     Ok(spec)      
 }
 
-fn exec_process(path: &str, args: &[String], env: &[String]) -> Result<()> {
+fn do_exec(path: &str, args: &[String], env: &[String]) -> Result<()> {
     let p: CString = CString::new(path.to_string()).unwrap();
     let a: Vec<CString> = args.iter()
         .map(|s| CString::new(s.to_string()).unwrap_or_default())
