@@ -165,7 +165,7 @@ fn run_container(container_dir: &str) -> Result<()> {
         pidns = true;
     }
 
-    let (child_pid, _wfd) = fork_container_process(userns, &spec)?;
+    let (child_pid, _wfd) = do_fork(userns, &spec)?;
 
     if child_pid != -1 {
         return Ok(())  
@@ -212,7 +212,7 @@ fn run_container(container_dir: &str) -> Result<()> {
     Ok(())  
 }
 
-fn fork_container_process(userns: bool, spec: &Spec) -> Result<(i32, RawFd)> {
+fn do_fork(userns: bool, spec: &Spec) -> Result<(i32, RawFd)> {
     let child_pipe = pipe::Pipe::new().chain_err(|| "Failed to create child pipe")?;
     let parent_pipe = pipe::Pipe::new().chain_err(|| "Failed to create parent pipe")?;
     let (rfd, wfd) = pipe2(OFlag::O_CLOEXEC).chain_err(|| "Failed to create pipe")?;
