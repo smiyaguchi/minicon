@@ -178,7 +178,7 @@ fn run_container(container_dir: &str) -> Result<()> {
     unshare(clone_flag).chain_err(|| "Failed to unshare namespace")?;
 
     if pidns {
-        fork_pid_ns()?;  
+        do_fork_pidns()?;  
     }
 
     if clone_flag.contains(CloneFlags::CLONE_NEWUTS) {
@@ -269,7 +269,7 @@ fn write_id_mappings(path: &str, id_mappings: &[IDMapping]) -> Result<()> {
     Ok(()) 
 }
 
-fn fork_pid_ns() -> Result<()> {
+fn do_fork_pidns() -> Result<()> {
     match fork()? {
         ForkResult::Child => {
             // continue process
