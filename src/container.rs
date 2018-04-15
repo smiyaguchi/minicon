@@ -41,55 +41,20 @@ pub struct Container {
 }
 
 pub trait Operation {
-    fn create(&mut self, container_id: &str, bundle: &str) -> Result<()>;
+    fn create(&mut self, container_id: &str, bundle: &str, root: &str) -> Result<()>;
 }
 
 impl Container for Operation {
-    fn create(container_id: &str, bundle: &str) -> Result<()> {
+    fn create(container_id: &str, bundle: &str, root: &str) -> Result<()> {
+        initialize(&NAMESPACES);
+
+        chdir(&bundle).chain_err(|| format!("Failed to chdir {}", bundle))?;
+
+        let dir = container_dir(state_dir, id);
+        create_dir_all(&dir).chain_err(|| format!("Failed create dir {}", dir))?;
+    
+        run_container(&dir)?;
         Ok(())
-    }
-}
-
-fn run() -> Result<()> {
-    let yaml = load_yaml!("cli.yml");
-    let matches = App::from_yaml(yaml).get_matches();
-
-    let state_dir = matches.value_of("root").unwrap().to_string();
-
-    match matches.subcommand() {
-        ("state", Some(state_matches)) => {
-            cmd_state(
-                state_matches.value_of("id").unwrap(),
-                &state_dir
-            )    
-        }
-        ("create", Some(create_matches)) => {
-            cmd_create(
-                create_matches.value_of("id").unwrap(), 
-                &state_dir,
-                create_matches
-            )  
-        }
-        ("start", Some(start_matches)) => {
-            cmd_start(
-                start_matches.value_of("id").unwrap(),
-                &state_dir
-            )  
-        }
-        ("kill", Some(kill_matches)) => {
-            cmd_kill(
-                kill_matches.value_of("id").unwrap(),
-                kill_matches.value_of("signal").unwrap(),
-                &state_dir
-            )
-        }
-        ("delete", Some(delete_matches)) => {
-            cmd_delete(
-                delete_matches.value_of("id").unwrap(),
-                &state_dir
-            )
-        }
-        _ => bail!("Command not recognized."), 
     }
 }
 
