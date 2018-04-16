@@ -42,6 +42,7 @@ pub struct Container {
 
 pub trait Operation {
     fn create(&mut self, container_id: &str, bundle: &str, root: &str) -> Result<()>;
+    fn start(&mut self, container_id: &str, root: &str) -> Result<()>;
 }
 
 impl Container for Operation {
@@ -50,23 +51,30 @@ impl Container for Operation {
 
         chdir(&bundle).chain_err(|| format!("Failed to chdir {}", bundle))?;
 
-        let dir = container_dir(state_dir, id);
+        let dir = container_dir(root, id);
         create_dir_all(&dir).chain_err(|| format!("Failed create dir {}", dir))?;
     
         run_container(&dir)?;
+        Ok(())
+    }
+
+    fn start(container_id: &str, root: &str) -> Result<()> {
+        let dir = container_dir(root, id);
+        chdir(&*dir).chain_err(|| format!("Failed change dir {}", dir))?;
+
+        let socket_url = "endpoint";
+        let sfd = socket(AddressFamily::Unix, SockType::Stream, SockFlag::empty(), None)?;
+        connect(sfd, &SockAddr::Unix(UnixAddr::new(&*socket_url)?))?;
+        let data: &[u8] = &[0];
+        write(sfd, data).chain_err(|| "Failed to write socket")?;
+        close(sfd)?;
+
         Ok(())
     }
 }
 
 fn container_dir(root: &str, id: &str) -> String {
     format!("{}/{}", root, id)  
-}
-
-fn cmd_state(id: &str, state_dir: &str) -> Result<()> {
-    let dir = container_dir(state_dir, id);
-    chdir(&*dir).chain_err(|| format!("Failed to chdir {}", dir))?;
-    
-    Ok(())       
 }
 
 fn cmd_create(id: &str, state_dir: &str, matches: &ArgMatches) -> Result<()> {
@@ -245,14 +253,6 @@ fn cmd_start(id: &str, state_dir: &str) -> Result<()> {
     write(sfd, data).chain_err(|| "Failed to write socket")?;
     close(sfd)?;
 
-    Ok(())
-}
-
-fn cmd_kill(id: &str, signal: &str, state_dir: &str) -> Result<()> {
-    Ok(())
-}
-
-fn cmd_delete(id: &str, state_dir: &str) -> Result<()> {
     Ok(())
 }
 
