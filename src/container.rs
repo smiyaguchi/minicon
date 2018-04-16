@@ -1,3 +1,4 @@
+use cgroup;
 use clap::{App, ArgMatches};
 use errors::*;
 use lazy_static::initialize;
@@ -12,7 +13,9 @@ use nix::sys::socket::{SockAddr, UnixAddr, AddressFamily, SockType, SockFlag};
 use nix::sys::stat::Mode;
 use nix_extension::{clearenv, putenv, setrlimit};
 use oci::{Spec, IDMapping};
-use pipe::Pipe;
+use pipe;
+use serde_json;
+use std;
 use std::collections::HashMap;
 use std::ffi::CString;
 use std::fs::File;
@@ -45,21 +48,21 @@ pub trait Operation {
     fn start(&mut self, container_id: &str, root: &str) -> Result<()>;
 }
 
-impl Container for Operation {
-    fn create(container_id: &str, bundle: &str, root: &str) -> Result<()> {
+impl Operation for Container {
+    fn create(&mut self, container_id: &str, bundle: &str, root: &str) -> Result<()> {
         initialize(&NAMESPACES);
 
-        chdir(&bundle).chain_err(|| format!("Failed to chdir {}", bundle))?;
+        chdir(&*bundle).chain_err(|| format!("Failed to chdir {}", bundle))?;
 
-        let dir = container_dir(root, id);
+        let dir = container_dir(root, container_id);
         create_dir_all(&dir).chain_err(|| format!("Failed create dir {}", dir))?;
     
         run_container(&dir)?;
         Ok(())
     }
 
-    fn start(container_id: &str, root: &str) -> Result<()> {
-        let dir = container_dir(root, id);
+    fn start(&mut self, container_id: &str, root: &str) -> Result<()> {
+        let dir = container_dir(root, container_id);
         chdir(&*dir).chain_err(|| format!("Failed change dir {}", dir))?;
 
         let socket_url = "endpoint";

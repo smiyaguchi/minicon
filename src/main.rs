@@ -15,6 +15,7 @@ extern crate serde_derive;
 extern crate serde_json;
 
 mod cgroup;
+mod container;
 mod errors;
 mod mount;
 mod nix_extension;
