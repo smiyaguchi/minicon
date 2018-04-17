@@ -48,6 +48,14 @@ pub trait Operation {
     fn start(&mut self, container_id: &str, root: &str) -> Result<()>;
 }
 
+impl Container {
+    fn new() -> Container {
+        Container {
+            pid: Pid::from_raw(0),
+        }
+    }
+}
+
 impl Operation for Container {
     fn create(&mut self, container_id: &str, bundle: &str, root: &str) -> Result<()> {
         initialize(&NAMESPACES);
