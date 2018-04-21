@@ -49,7 +49,7 @@ pub trait Operation {
 }
 
 impl Container {
-    fn new() -> Container {
+    pub fn new() -> Container {
         Container {
             pid: Pid::from_raw(0),
         }

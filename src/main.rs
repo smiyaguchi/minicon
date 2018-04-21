@@ -23,6 +23,7 @@ mod oci;
 mod pipe;
 
 use clap::{App, ArgMatches};
+use container::Container;
 use errors::*;
 use lazy_static::initialize;
 use mount::do_pivot_root;
@@ -68,6 +69,8 @@ fn run() -> Result<()> {
     let matches = App::from_yaml(yaml).get_matches();
 
     let state_dir = matches.value_of("root").unwrap().to_string();
+
+    let container = Container::new();
 
     match matches.subcommand() {
         ("state", Some(state_matches)) => {
