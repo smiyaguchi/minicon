@@ -24,6 +24,7 @@ mod pipe;
 
 use clap::{App, ArgMatches};
 use container::Container;
+use container::Operation;
 use errors::*;
 use lazy_static::initialize;
 use mount::do_pivot_root;
@@ -70,7 +71,7 @@ fn run() -> Result<()> {
 
     let state_dir = matches.value_of("root").unwrap().to_string();
 
-    let container = Container::new();
+    let mut container = Container::new();
 
     match matches.subcommand() {
         ("state", Some(state_matches)) => {
@@ -80,11 +81,16 @@ fn run() -> Result<()> {
             )    
         }
         ("create", Some(create_matches)) => {
-            cmd_create(
-                create_matches.value_of("id").unwrap(), 
-                &state_dir,
-                create_matches
-            )  
+            container.create(
+                create_matches.value_of("id").unwrap(),
+                create_matches.value_of("bundle").unwrap(),
+                &state_dir
+            )
+            //cmd_create(
+            //    create_matches.value_of("id").unwrap(), 
+            //    &state_dir,
+            //    create_matches
+            //)  
         }
         ("start", Some(start_matches)) => {
             cmd_start(
