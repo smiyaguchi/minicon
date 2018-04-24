@@ -68,10 +68,10 @@ fn run() -> Result<()> {
             )
         }
         ("start", Some(start_matches)) => {
-            cmd_start(
+            container.start(
                 start_matches.value_of("id").unwrap(),
                 &state_dir
-            )  
+            )
         }
         ("kill", Some(kill_matches)) => {
             cmd_kill(
@@ -99,20 +99,6 @@ fn cmd_state(id: &str, state_dir: &str) -> Result<()> {
     chdir(&*dir).chain_err(|| format!("Failed to chdir {}", dir))?;
     
     Ok(())       
-}
-
-fn cmd_start(id: &str, state_dir: &str) -> Result<()> {
-    let dir = container_dir(state_dir, id);
-    chdir(&*dir).chain_err(|| format!("Failed change dir {}", dir))?;
-
-    let socket_url = "endpoint";
-    let sfd = socket(AddressFamily::Unix, SockType::Stream, SockFlag::empty(), None)?;
-    connect(sfd, &SockAddr::Unix(UnixAddr::new(&*socket_url)?))?;
-    let data: &[u8] = &[0];
-    write(sfd, data).chain_err(|| "Failed to write socket")?;
-    close(sfd)?;
-
-    Ok(())
 }
 
 fn cmd_kill(id: &str, signal: &str, state_dir: &str) -> Result<()> {
