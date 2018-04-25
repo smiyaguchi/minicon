@@ -23,23 +23,9 @@ mod oci;
 mod pipe;
 
 use clap::{App, ArgMatches};
-use container::Container;
-use container::Operation;
+use container::{Container, Operation};
 use errors::*;
 use nix::unistd::chdir;
-use nix::unistd::{write, close};
-use nix::sys::socket::{socket, bind, listen, accept, connect};
-use nix::sys::socket::{SockAddr, UnixAddr, AddressFamily, SockType, SockFlag};
-use nix::sys::stat::Mode;
-use oci::{Spec, IDMapping};
-use pipe::Pipe;
-use std::collections::HashMap;
-use std::ffi::CString;
-use std::fs::File;
-use std::fs::{create_dir_all, canonicalize};
-use std::io::Write;
-use std::os::unix::io::RawFd;
-use std::path::Path;
 
 fn main() {
     run().expect("Failed run minicon");

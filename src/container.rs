@@ -88,20 +88,6 @@ fn container_dir(root: &str, id: &str) -> String {
     format!("{}/{}", root, id)  
 }
 
-fn cmd_create(id: &str, state_dir: &str, matches: &ArgMatches) -> Result<()> {
-    initialize(&NAMESPACES);
-
-    let bundle = matches.value_of("bundle").unwrap();
-    chdir(&*bundle).chain_err(|| format!("Failed to chdir {}", bundle))?;
-
-    let dir = container_dir(state_dir, id);
-    create_dir_all(&dir).chain_err(|| format!("Failed create dir {}", dir))?;
-    
-    run_container(&dir)?;
-
-    Ok(())  
-}
-
 fn run_container(container_dir: &str) -> Result<()> {
     let spec = read_config("config.json")?;
 
@@ -251,20 +237,6 @@ fn do_fork_pidns() -> Result<()> {
         }  
     } 
     Ok(()) 
-}
-
-fn cmd_start(id: &str, state_dir: &str) -> Result<()> {
-    let dir = container_dir(state_dir, id);
-    chdir(&*dir).chain_err(|| format!("Failed change dir {}", dir))?;
-
-    let socket_url = "endpoint";
-    let sfd = socket(AddressFamily::Unix, SockType::Stream, SockFlag::empty(), None)?;
-    connect(sfd, &SockAddr::Unix(UnixAddr::new(&*socket_url)?))?;
-    let data: &[u8] = &[0];
-    write(sfd, data).chain_err(|| "Failed to write socket")?;
-    close(sfd)?;
-
-    Ok(())
 }
 
 fn read_config<P: AsRef<Path>>(path: P) -> Result<Spec> {
