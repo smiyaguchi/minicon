@@ -46,6 +46,7 @@ pub struct Container {
 pub trait Operation {
     fn create(&mut self, container_id: &str, bundle: &str, root: &str) -> Result<()>;
     fn start(&mut self, container_id: &str, root: &str) -> Result<()>;
+    fn state(&mut self, container_id: &str, root: &str) -> Result<()>;
 }
 
 impl Container {
@@ -79,6 +80,13 @@ impl Operation for Container {
         let data: &[u8] = &[0];
         write(sfd, data).chain_err(|| "Failed to write socket")?;
         close(sfd)?;
+
+        Ok(())
+    }
+
+    fn state(&mut self, container_id: &str, root: &str) -> Result<()> {
+        let dir = container_dir(root, container_id);
+        chdir(&*dir).chain_err(|| format!("Failed change dir {}", dir))?;
 
         Ok(())
     }
