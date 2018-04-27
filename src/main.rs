@@ -60,30 +60,18 @@ fn run() -> Result<()> {
             )
         }
         ("kill", Some(kill_matches)) => {
-            cmd_kill(
+            container.kill(
                 kill_matches.value_of("id").unwrap(),
-                kill_matches.value_of("signal").unwrap(),
-                &state_dir
+                &state_dir,
+                kill_matches.value_of("signal").unwrap()
             )
         }
         ("delete", Some(delete_matches)) => {
-            cmd_delete(
+            container.delete(
                 delete_matches.value_of("id").unwrap(),
                 &state_dir
             )
         }
         _ => bail!("Command not recognized."), 
     }
-}
-
-fn container_dir(root: &str, id: &str) -> String {
-    format!("{}/{}", root, id)  
-}
-
-fn cmd_kill(id: &str, signal: &str, state_dir: &str) -> Result<()> {
-    Ok(())
-}
-
-fn cmd_delete(id: &str, state_dir: &str) -> Result<()> {
-    Ok(())
 }

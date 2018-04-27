@@ -47,6 +47,8 @@ pub trait Operation {
     fn create(&mut self, container_id: &str, bundle: &str, root: &str) -> Result<()>;
     fn start(&mut self, container_id: &str, root: &str) -> Result<()>;
     fn state(&mut self, container_id: &str, root: &str) -> Result<()>;
+    fn kill(&mut self, container_id: &str, root: &str, signal: &str) -> Result<()>;
+    fn delete(&mut self, container_id: &str, root: &str) -> Result<()>;
 }
 
 impl Container {
@@ -89,6 +91,14 @@ impl Operation for Container {
         chdir(&*dir).chain_err(|| format!("Failed change dir {}", dir))?;
 
         Ok(())
+    }
+
+    fn kill(&mut self, container_id: &str, root: &str, signal: &str) -> Result<()> {
+        Ok(())
+    }
+
+    fn delete(&mut self, container_id: &str, root: &str) -> Result<()> {
+        Ok(())  
     }
 }
 
