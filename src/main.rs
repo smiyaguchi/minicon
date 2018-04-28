@@ -25,7 +25,6 @@ mod pipe;
 use clap::{App, ArgMatches};
 use container::{Container, Operation};
 use errors::*;
-use nix::unistd::chdir;
 
 fn main() {
     run().expect("Failed run minicon");
