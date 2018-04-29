@@ -22,7 +22,7 @@ mod nix_extension;
 mod oci;
 mod pipe;
 
-use clap::{App, ArgMatches};
+use clap::App;
 use container::{Container, Operation};
 use errors::*;
 

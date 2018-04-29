@@ -1,5 +1,4 @@
 use cgroup;
-use clap::{App, ArgMatches};
 use errors::*;
 use lazy_static::initialize;
 use mount::do_pivot_root;
