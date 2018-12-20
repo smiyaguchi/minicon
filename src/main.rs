@@ -53,10 +53,8 @@ fn create(state_dir: &str, id: &str, matches: &ArgMatches) -> Result<(), Error> 
     let bundle = matches.value_of("bundle").unwrap();
     chdir(bundle)?;
 
-    // TODO validate rootfs path is absolute path.
     let dir = instance_dir(state_dir, id);
     if let Err(e) = create_dir(&dir) {
-        // TODO return error with error message.
         panic!("container id {} is already exsits. {}", id, e);            
     }
     
@@ -73,7 +71,6 @@ fn instance_dir(state_dir: &str, id: &str) -> String {
 }
 
 fn create_container(instance_dir: &str, _id: &str, matches: &ArgMatches) -> Result<(), Error> {
-    // TODO Spec::load recieve config.json path
     let spec = Spec::load()?;
     let _rootfs = canonicalize(&spec.root.path)?
         .to_string_lossy()
