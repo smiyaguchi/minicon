@@ -1,59 +1,32 @@
-name: minicon
+name: con
 version: "0.1.0"
-author: smiyaguchi <smiyaguchi96@gmail.com>
-about: minimal container runtime
 args:
-    - root:
-        default_value: /run/minicon
-        takes_value: true
-        help: Container rootfs path. 
+    - version:
+        short: v
+        long: version
+        help: Show version
 subcommands:
-    - state:
-        about: Show container state.
-        args:
-            - id:
-                required: true
-                takes_value: true
-                value_name: container-id
-                help: Container id.
     - create:
-        about: Create a container.
+        about: create a container
         args:
             - id:
                 required: true
-                takes_value: true
-                value_name: container-id
-                help: Container id.
+                help: container id
             - bundle:
+                short: b
+                long: bundle
                 required: true
                 default_value: .
-                help: Container bundle path.
-    - start:
-        about: Start a container.
-        args:
-            - id:
-                required: true
+                help: path to bundle
+            - console-socket:
                 takes_value: true
-                value_name: container-id
-                help: Container id.
-    - kill:
-        about: Kill a container.
-        args:
-            - id:
-                required: true
+                help: socket to pass master of console
+            - console:
+                short: c
+                long: console
                 takes_value: true
-                value_name: container-id
-                help: Container id.
-            - signal:
-                required: true
-                default_value: TERM
-                takes_value: true
-                help: Send signal to container.
-    - delete:
-        about: Delete a container.
-        args:
-            - id:
-                required: true
-                takes_value: true
-                value_name: container-id
-                help: Container id.
+                help: console to use
+            - no-trigger:
+                short: nt
+                long: no-trigger
+                help: double fork instead of trigger
