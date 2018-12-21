@@ -14,7 +14,7 @@ mod error;
 use clap::{App, ArgMatches};
 use failure::Error;
 use nix::fcntl::{open, OFlag};
-use nix::sched::{unshare, CloneFlags};
+use nix::sched::{setns, unshare, CloneFlags};
 use nix::sys::socket::{bind, connect, socket, AddressFamily, SockAddr, SockType, SockFlag, UnixAddr};
 use nix::sys::stat::Mode;
 use nix::unistd::{chdir, close, dup2};
@@ -108,6 +108,7 @@ fn create_container(instance_dir: &str, _id: &str, matches: &ArgMatches) -> Resu
     let mut ns_enter = Vec::new();
     let mut is_pid = false;
     let linux = &spec.linux.unwrap();
+
     for ns in &linux.namespaces {
         if ns.path.is_empty() {
             match ns.typ {
@@ -121,7 +122,15 @@ fn create_container(instance_dir: &str, _id: &str, matches: &ArgMatches) -> Resu
             }
         } else {
             let fd = open(&*ns.path, OFlag::empty(), Mode::empty())?;
-            ns_enter.push(fd);    
+            
+            match ns.typ {
+                NamespaceType::pid => {
+                    setns(fd, CloneFlags::CLONE_NEWPID)?;
+                    close(fd)?;
+                    continue;    
+                },
+                _ => ns_enter.push(fd),    
+            }
         }
 
         if clone_flags.contains(CloneFlags::CLONE_NEWPID) {
