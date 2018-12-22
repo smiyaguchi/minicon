@@ -17,8 +17,9 @@ use nix::fcntl::{open, OFlag};
 use nix::sched::{setns, unshare, CloneFlags};
 use nix::sys::socket::{bind, connect, socket, AddressFamily, SockAddr, SockType, SockFlag, UnixAddr};
 use nix::sys::stat::Mode;
-use nix::unistd::{chdir, close, dup2};
-use oci::{Spec, NamespaceType};
+use nix::unistd::{chdir, close, dup2, fork, pipe2, write};
+use nix::unistd::{ForkResult};
+use oci::{Linux, NamespaceType, Mapping, Spec};
 use std::fs::{canonicalize, create_dir, create_dir_all, remove_dir_all};
 use std::os::unix::fs::symlink;
 use std::os::unix::io::RawFd;
@@ -106,8 +107,8 @@ fn create_container(instance_dir: &str, _id: &str, matches: &ArgMatches) -> Resu
     
     let mut clone_flags = CloneFlags::empty();
     let mut ns_enter = Vec::new();
-    let mut pidns = false;
-    let linux = &spec.linux.unwrap();
+    let mut userns = false;
+    let linux = spec.linux.as_ref().unwrap();
 
     for ns in &linux.namespaces {
         if ns.path.is_empty() {
@@ -117,7 +118,7 @@ fn create_container(instance_dir: &str, _id: &str, matches: &ArgMatches) -> Resu
                 NamespaceType::mount => clone_flags.insert(CloneFlags::CLONE_NEWNS),
                 NamespaceType::ipc => clone_flags.insert(CloneFlags::CLONE_NEWPID),
                 NamespaceType::uts => clone_flags.insert(CloneFlags::CLONE_NEWUTS),
-                NamespaceType::user => clone_flags.insert(CloneFlags::CLONE_NEWUSER),
+                NamespaceType::user => { userns = true; },
                 NamespaceType::cgroup => clone_flags.insert(CloneFlags::CLONE_NEWCGROUP),
             }
         } else {
@@ -132,11 +133,14 @@ fn create_container(instance_dir: &str, _id: &str, matches: &ArgMatches) -> Resu
                 _ => ns_enter.push(fd),    
             }
         }
-
-        if clone_flags.contains(CloneFlags::CLONE_NEWPID) {
-            pidns = true; 
-        }
     }
+    
+    let mut _pidns = false;
+    if clone_flags.contains(CloneFlags::CLONE_NEWPID) {
+        _pidns = true; 
+    }
+
+    let (_chid_pid, _wfd) = do_fork(userns, &spec, &linux)?;
 
     unshare(clone_flags)?;
 
@@ -160,3 +164,41 @@ fn load_console_socket() -> Result<(RawFd, RawFd), Error> {
     Ok((csocketfd, consolefd))
 }
 
+fn do_fork(userns: bool, _spec: &Spec, linux: &Linux) -> Result<(i32, RawFd), Error> {
+    let (rfd, wfd) = pipe2(OFlag::O_CLOEXEC)?;
+    match fork()? {
+        ForkResult::Child => {
+            close(rfd)?;
+            
+            if userns {
+                unshare(CloneFlags::CLONE_NEWUSER)?;    
+            }    
+        },
+        ForkResult::Parent { child } => {
+            close(wfd)?;
+          
+            if userns {
+                write_id_mappings(&format!("/proc/{}/uid_map", child), &linux.uid_mappings)?;
+                write_id_mappings(&format!("/proc/{}/gid_map", child), &linux.gid_mappings)?;
+            }
+            
+            std::process::exit(0);   
+        }    
+    }
+    Ok((-1, wfd))    
+}
+
+fn write_id_mappings(path: &str, id_mappings: &Vec<Mapping>) -> Result<(), Error> {
+    let mut data = String::new();
+    for m in id_mappings {
+        let value = format!("{} {} {}\n", m.container_id, m.host_id, m.size);
+        data = data + &value;
+    }
+
+    if !data.is_empty() {
+        let fd = open(path, OFlag::O_WRONLY, Mode::empty())?;
+        write(fd, data.as_bytes())?;
+        close(fd)?;    
+    }
+    Ok(())
+}
