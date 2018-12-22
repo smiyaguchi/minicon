@@ -106,7 +106,7 @@ fn create_container(instance_dir: &str, _id: &str, matches: &ArgMatches) -> Resu
     
     let mut clone_flags = CloneFlags::empty();
     let mut ns_enter = Vec::new();
-    let mut is_pid = false;
+    let mut pidns = false;
     let linux = &spec.linux.unwrap();
 
     for ns in &linux.namespaces {
@@ -134,7 +134,7 @@ fn create_container(instance_dir: &str, _id: &str, matches: &ArgMatches) -> Resu
         }
 
         if clone_flags.contains(CloneFlags::CLONE_NEWPID) {
-            is_pid = true; 
+            pidns = true; 
         }
     }
 
