@@ -36,7 +36,7 @@ fn main() {
 }
 
 fn run(matches: &ArgMatches) -> Result<(), Error> {
-    let state_dir = "/run/con";
+    let state_dir = "/run/minicon";
     create_dir_all(state_dir)?;
 
     match matches.subcommand() {
