@@ -181,7 +181,7 @@ pub struct Namespace {
     pub path: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub enum NamespaceType {
     pid,
     network,

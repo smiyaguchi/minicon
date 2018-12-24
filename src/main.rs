@@ -2,6 +2,8 @@
 extern crate clap;
 #[macro_use]
 extern crate failure;
+#[macro_use]
+extern crate lazy_static;
 extern crate nix;
 extern crate serde;
 #[macro_use]
@@ -22,11 +24,26 @@ use nix::sys::stat::Mode;
 use nix::unistd::{chdir, close, dup2, fork, pipe2, write};
 use nix::unistd::ForkResult;
 use oci::{Linux, NamespaceType, Mapping, Spec};
+use std::collections::HashMap;
 use std::fs::{canonicalize, create_dir, create_dir_all, remove_dir_all};
 use std::os::unix::fs::symlink;
 use std::os::unix::io::RawFd;
 
 const TSOCKETFD: RawFd = 9;
+
+lazy_static! {
+    static ref NAMESPACES: HashMap<NamespaceType, CloneFlags> = {
+        let mut mapping = HashMap::new();
+        mapping.insert(NamespaceType::ipc, CloneFlags::CLONE_NEWIPC);
+        mapping.insert(NamespaceType::uts, CloneFlags::CLONE_NEWUTS);
+        mapping.insert(NamespaceType::network, CloneFlags::CLONE_NEWNET);
+        mapping.insert(NamespaceType::pid, CloneFlags::CLONE_NEWPID);
+        mapping.insert(NamespaceType::mount, CloneFlags::CLONE_NEWNS);
+        mapping.insert(NamespaceType::cgroup, CloneFlags::CLONE_NEWCGROUP);
+        mapping.insert(NamespaceType::user, CloneFlags::CLONE_NEWUSER);
+        mapping
+    };    
+}
 
 fn main() {
     let yaml = load_yaml!("cli.yml");
@@ -132,7 +149,11 @@ fn create_container(instance_dir: &str, _id: &str, matches: &ArgMatches) -> Resu
                     close(fd)?;
                     continue;    
                 },
-                _ => ns_enter.push(fd),    
+                _ => {
+                    if let Some(v) = NAMESPACES.get(&ns.typ) {
+                        ns_enter.push((fd, *v));    
+                    }
+                }
             }
         }
     }
@@ -143,6 +164,11 @@ fn create_container(instance_dir: &str, _id: &str, matches: &ArgMatches) -> Resu
     }
 
     let (_chid_pid, _wfd) = do_fork(userns, &spec, &linux)?;
+
+    for (fd, clone_flag) in ns_enter {
+        setns(fd, clone_flag)?;
+        close(fd)?;    
+    }
 
     unshare(clone_flags)?;
 
