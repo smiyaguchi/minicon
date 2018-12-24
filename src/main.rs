@@ -131,29 +131,20 @@ fn create_container(instance_dir: &str, _id: &str, matches: &ArgMatches) -> Resu
 
     for ns in &linux.namespaces {
         if ns.path.is_empty() {
-            match ns.typ {
-                NamespaceType::pid => clone_flags.insert(CloneFlags::CLONE_NEWPID),
-                NamespaceType::network => clone_flags.insert(CloneFlags::CLONE_NEWNET),
-                NamespaceType::mount => clone_flags.insert(CloneFlags::CLONE_NEWNS),
-                NamespaceType::ipc => clone_flags.insert(CloneFlags::CLONE_NEWPID),
-                NamespaceType::uts => clone_flags.insert(CloneFlags::CLONE_NEWUTS),
-                NamespaceType::user => { userns = true; },
-                NamespaceType::cgroup => clone_flags.insert(CloneFlags::CLONE_NEWCGROUP),
+            if let Some(v) = NAMESPACES.get(&ns.typ) {
+                clone_flags.insert(*v);    
             }
         } else {
             let fd = open(&*ns.path, OFlag::empty(), Mode::empty())?;
+
+            if ns.typ == NamespaceType::pid {
+                setns(fd, CloneFlags::CLONE_NEWPID)?;
+                close(fd)?;
+                continue;    
+            }
             
-            match ns.typ {
-                NamespaceType::pid => {
-                    setns(fd, CloneFlags::CLONE_NEWPID)?;
-                    close(fd)?;
-                    continue;    
-                },
-                _ => {
-                    if let Some(v) = NAMESPACES.get(&ns.typ) {
-                        ns_enter.push((fd, *v));    
-                    }
-                }
+            if let Some(v) = NAMESPACES.get(&ns.typ) {
+                ns_enter.push((fd, *v));
             }
         }
     }
