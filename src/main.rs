@@ -149,9 +149,9 @@ fn create_container(instance_dir: &str, _id: &str, matches: &ArgMatches) -> Resu
         }
     }
     
-    let mut _pidns = false;
+    let mut pidns = false;
     if clone_flags.contains(CloneFlags::CLONE_NEWPID) {
-        _pidns = true; 
+        pidns = true; 
     }
 
     let (_chid_pid, _wfd) = do_fork(userns, &spec, &linux)?;
@@ -162,6 +162,10 @@ fn create_container(instance_dir: &str, _id: &str, matches: &ArgMatches) -> Resu
     }
 
     unshare(clone_flags)?;
+
+    if pidns {
+        fork_pidns()?;
+    }
 
     Ok(())    
 }
@@ -220,4 +224,16 @@ fn write_id_mappings(path: &str, id_mappings: &Vec<Mapping>) -> Result<(), Error
         close(fd)?;    
     }
     Ok(())
+}
+
+fn fork_pidns() -> Result<(), Error> {
+    match fork()? {
+        ForkResult::Child => {
+            // continue process
+        },
+        ForkResult::Parent { .. } => {
+            std::process::exit(0);    
+        } 
+    }
+    Ok(())    
 }
